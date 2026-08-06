@@ -1,5 +1,5 @@
 import { request } from "./apiClient";
-import { mockRentals } from "./mockData";
+import { mockEquipmentList, mockRentals } from "./mockData";
 
 const USE_MOCK = import.meta.env.VITE_USE_MOCK === "true";
 
@@ -8,6 +8,8 @@ function toRental(raw) {
     id: raw.id,
     equipmentId: raw.equipment_id,
     equipmentName: raw.equipment_name,
+    equipmentImageUrl: raw.equipment_image_url,
+    equipmentCategory: raw.equipment_category,
     startDate: raw.start_date,
     endDate: raw.end_date,
     quantity: raw.quantity,
@@ -19,13 +21,15 @@ function toRental(raw) {
 
 export async function createRental(payload) {
   if (USE_MOCK) {
+    const equipment = mockEquipmentList.find(
+      (item) => item.id === Number(payload.equipmentId),
+    );
     return {
       id: Date.now(),
       equipmentId: Number(payload.equipmentId),
-      equipmentName:
-        mockRentals.find(
-          (rental) => rental.equipmentId === Number(payload.equipmentId),
-        )?.equipmentName ?? "기자재",
+      equipmentName: equipment?.name ?? "기자재",
+      equipmentImageUrl: equipment?.imageUrl,
+      equipmentCategory: equipment?.category,
       startDate: payload.startDate,
       endDate: payload.endDate,
       quantity: payload.quantity,

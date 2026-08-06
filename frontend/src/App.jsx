@@ -16,10 +16,10 @@ function App() {
           <Routes>
             <Route path="/login" element={<Login />} />
             <Route path="/" element={<Home />} />
+            <Route path="/mypage" element={<MyPage />} />
             <Route element={<Layout />}>
               <Route path="/equipment/:id" element={<EquipmentDetail />} />
               <Route path="/rental/:id" element={<Rental />} />
-              <Route path="/mypage" element={<MyPage />} />
             </Route>
           </Routes>
         </BrowserRouter>

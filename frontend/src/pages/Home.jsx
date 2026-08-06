@@ -1,13 +1,12 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useApp } from "../context/AppContext";
 import { useAuth } from "../context/AuthContext";
 import { getEquipmentList } from "../api/equipmentApi";
 import { getMyRentals } from "../api/rentalApi";
 import EquipmentCard from "../components/equipment/EquipmentCard";
-import DepartmentSelect, {
-  DEPARTMENTS,
-} from "../components/equipment/DepartmentSelect";
+import { DEPARTMENTS } from "../components/equipment/DepartmentSelect";
+import AppHeader from "../components/layout/AppHeader";
 import EmptyState from "../components/common/EmptyState";
 
 const TREND_ICONS = ["fa-flask", "fa-microscope", "fa-blender"];
@@ -55,33 +54,7 @@ function Home() {
 
   return (
     <div className="bg-[#f4f5f7] text-gray-800 antialiased">
-      <header className="sticky top-0 z-50 border-b border-gray-200 bg-white">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex h-16 items-center justify-between">
-            <Link to="/" className="flex flex-shrink-0 items-center gap-2">
-              <i className="fa-solid fa-wrench text-xl text-home-primary" />
-              <span className="text-xl font-bold text-home-primary">
-                MJC 기자재 대여
-              </span>
-            </Link>
-            <nav className="hidden items-center gap-8 md:flex">
-              <Link
-                to="/"
-                className="flex items-center gap-2 font-bold text-home-primary"
-              >
-                <i className="fa-solid fa-house" /> HOME
-              </Link>
-              <DepartmentSelect />
-              <Link
-                to="/mypage"
-                className="flex items-center gap-2 font-medium text-gray-700 hover:text-home-primary"
-              >
-                <i className="fa-regular fa-circle-user text-xl" /> 마이페이지
-              </Link>
-            </nav>
-          </div>
-        </div>
-      </header>
+      <AppHeader />
 
       <main className="mx-auto max-w-5xl pb-16">
         <div className="relative mt-6 h-[300px] w-full overflow-hidden rounded-xl shadow-md">
