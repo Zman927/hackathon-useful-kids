@@ -56,6 +56,16 @@
   --color-badge-completed-bg: #f4f5f7;
   --color-badge-completed-text: #42526e;
 
+  /* Home page only: distinct flat palette from a separate Stitch mockup.
+     Namespaced home-* so it doesn't collide with the Material 3 tokens
+     above, which the other 4 pages still rely on. */
+  --color-home-primary: #0052cc;
+  --color-home-secondary: #f0f5ff;
+  --color-home-success: #e6f4ea;
+  --color-home-success-text: #137333;
+  --color-home-warning: #fef7e0;
+  --color-home-warning-text: #b06000;
+
   --spacing-base: 4px;
   --spacing-xs: 4px;
   --spacing-sm: 8px;
@@ -149,4 +159,9 @@ input[type="number"]::-webkit-outer-spin-button {
 
 input[type="number"] {
   -moz-appearance: textfield;
+}
+
+/* Home page only: hover-triggered department drawer. */
+.dropdown-group:hover .dropdown-menu {
+  display: block;
 }

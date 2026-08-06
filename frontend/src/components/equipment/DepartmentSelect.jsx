@@ -9,25 +9,37 @@ export const DEPARTMENTS = [
 
 function DepartmentSelect() {
   const { selectedDepartmentId, setSelectedDepartmentId } = useApp();
-
-  function handleChange(event) {
-    const value = event.target.value;
-    setSelectedDepartmentId(value ? Number(value) : null);
-  }
+  const selectedName = DEPARTMENTS.find(
+    (department) => department.id === selectedDepartmentId,
+  )?.name;
 
   return (
-    <select
-      value={selectedDepartmentId ?? ""}
-      onChange={handleChange}
-      className="border-none bg-transparent text-headline-md font-headline-md font-bold text-on-surface outline-none focus:ring-0"
-    >
-      <option value="">학과 선택</option>
-      {DEPARTMENTS.map((department) => (
-        <option key={department.id} value={department.id}>
-          {department.name}
-        </option>
-      ))}
-    </select>
+    <div className="dropdown-group relative">
+      <button className="flex items-center gap-2 py-5 font-medium text-gray-700 hover:text-home-primary">
+        <i className="fa-solid fa-graduation-cap" />
+        {selectedName ?? "학과 선택"}
+      </button>
+      <div className="dropdown-menu absolute top-full left-1/2 z-50 hidden w-56 -translate-x-1/2 rounded-lg border border-gray-200 bg-white p-4 shadow-xl">
+        <h3 className="mb-2 border-b border-gray-100 pb-2 font-bold text-gray-800">
+          학과 선택
+        </h3>
+        <ul className="space-y-1 text-sm text-gray-600">
+          {DEPARTMENTS.map((department) => (
+            <li
+              key={department.id}
+              onClick={() => setSelectedDepartmentId(department.id)}
+              className={`cursor-pointer rounded p-1 hover:text-home-primary ${
+                department.id === selectedDepartmentId
+                  ? "bg-home-secondary font-bold text-home-primary"
+                  : ""
+              }`}
+            >
+              {department.name}
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
   );
 }
 

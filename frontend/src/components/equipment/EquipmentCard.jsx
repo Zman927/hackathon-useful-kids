@@ -1,34 +1,37 @@
-import Badge from "../common/Badge";
-
 function EquipmentCard({ equipment, onClick }) {
   return (
     <div
       onClick={onClick}
-      className="card-hover flex cursor-pointer flex-col gap-md rounded-lg border border-secondary-fixed bg-surface-container-lowest p-md"
+      className="relative flex h-full cursor-pointer flex-col overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm transition-shadow hover:shadow-md"
     >
-      <div className="flex items-start justify-between">
-        <img
-          src={equipment.imageUrl}
-          alt={equipment.name}
-          className="h-16 w-16 rounded bg-surface-variant object-cover"
-        />
-        <Badge
-          label={equipment.isAvailable ? "대여 가능" : "대여 불가"}
-          variant={equipment.isAvailable ? "available" : "unavailable"}
-        />
+      <div className="absolute top-3 right-3 z-10">
+        <span
+          className={`rounded px-2 py-1 text-xs font-bold ${
+            equipment.isAvailable
+              ? "bg-home-success text-home-success-text"
+              : "bg-home-warning text-home-warning-text"
+          }`}
+        >
+          {equipment.isAvailable ? "대여 가능" : "대여 불가"}
+        </span>
       </div>
-      <div>
-        <h3 className="mb-xs text-headline-md font-headline-md text-on-surface">
+      <div className="flex flex-grow flex-col p-4">
+        <div className="mb-4 flex h-32 items-center justify-center">
+          <img
+            src={equipment.imageUrl}
+            alt={equipment.name}
+            className="max-h-full object-contain"
+          />
+        </div>
+        <h3 className="mb-1 text-lg font-bold text-gray-900">
           {equipment.name}
         </h3>
-        <p className="text-label-sm font-label-sm text-secondary">
-          {equipment.category}
-        </p>
-      </div>
-      <div className="mt-auto flex justify-end border-t border-secondary-fixed pt-sm">
-        <span className="text-label-lg font-label-lg text-primary">
-          자세히 보기
-        </span>
+        <p className="mb-4 text-xs text-gray-500">{equipment.category}</p>
+        <div className="mt-auto border-t border-gray-100 pt-3 text-right">
+          <span className="text-sm font-bold text-home-primary hover:underline">
+            자세히 보기
+          </span>
+        </div>
       </div>
     </div>
   );
