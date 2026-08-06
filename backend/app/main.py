@@ -7,7 +7,7 @@ from fastapi.staticfiles import StaticFiles
 from app.core.storage import STATIC_ROOT
 from app.core.database import AsyncSessionLocal, Base, engine
 from app.init_db import seed_initial_data
-from app.api import assistant, auth, student
+from app.api import auth, departments, equipment, rentals
 
 
 @asynccontextmanager
@@ -40,8 +40,9 @@ app.add_middleware(
 app.mount("/static", StaticFiles(directory=STATIC_ROOT), name="static")
 
 app.include_router(auth.router)
-app.include_router(assistant.router)
-app.include_router(student.router)
+app.include_router(equipment.router)
+app.include_router(rentals.router)
+app.include_router(departments.router)
 
 
 @app.get("/health", tags=["health"])

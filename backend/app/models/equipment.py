@@ -13,6 +13,7 @@ class Equipment(Base):
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
     name: Mapped[str] = mapped_column(String(100), nullable=False)
     department: Mapped[Department] = mapped_column(Enum(Department, name="department_enum"), nullable=False)
+    category: Mapped[str | None] = mapped_column(String(50), nullable=True)
     total_quantity: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     available_quantity: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)

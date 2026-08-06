@@ -13,6 +13,13 @@ class Token(BaseModel):
     token_type: str = "bearer"
 
 
+class LoginResponse(BaseModel):
+    access_token: str
+    user_id: str
+    user_name: str
+    role: str
+
+
 class TokenPayload(BaseModel):
     student_id: str | None = None
     role: Role | None = None

@@ -15,6 +15,7 @@ class Rental(Base):
     equipment_id: Mapped[int] = mapped_column(ForeignKey("equipments.id"), nullable=False, index=True)
     start_date: Mapped[date] = mapped_column(Date, nullable=False)
     end_date: Mapped[date] = mapped_column(Date, nullable=False)
+    quantity: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
     reason: Mapped[str | None] = mapped_column(Text, nullable=True)
     status: Mapped[RentalStatus] = mapped_column(
         Enum(RentalStatus, name="rental_status_enum"), nullable=False, default=RentalStatus.PENDING
