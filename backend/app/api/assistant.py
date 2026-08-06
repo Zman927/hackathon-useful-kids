@@ -3,7 +3,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.storage import delete_equipment_image, save_equipment_image
-from app.database import get_db
+from app.core.database import get_db
 from app.deps import require_assistant
 from app.models.enums import RentalStatus
 from app.models.equipment import Equipment

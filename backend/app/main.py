@@ -5,9 +5,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from app.core.storage import STATIC_ROOT
-from app.database import AsyncSessionLocal, Base, engine
+from app.core.database import AsyncSessionLocal, Base, engine
 from app.init_db import seed_initial_data
-from app.routers import assistant, auth, student
+from app.api import assistant, auth, student
 
 
 @asynccontextmanager
