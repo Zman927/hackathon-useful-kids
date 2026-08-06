@@ -688,7 +688,7 @@ Expected: `dist/` 폴더 생성, 에러 없음
 
 ```
 # frontend/.env.example
-VITE_API_BASE=https://<railway-app-url>
+VITE_API_BASE=https://<기기이름>.<tailnet>.ts.net
 ```
 
 - [ ] **Step 3: Vercel 배포**

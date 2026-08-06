@@ -6,11 +6,12 @@
 
 **Architecture:** FastAPI 단일 서비스 + PostgreSQL(배포)/SQLite(테스트). SQLAlchemy ORM으로 `Equipment`, `Rental` 두 테이블을 관리한다. 인증 없음 — 조교 화면은 프론트엔드에서 비공개 URL로만 보호한다(MVP 범위).
 
-**Tech Stack:** Python 3.11+, FastAPI, SQLAlchemy 2.x, Pydantic v2, pytest + httpx(TestClient), Railway(배포 — 백엔드+Postgres)
+**Tech Stack:** Python 3.11+, FastAPI, SQLAlchemy 2.x, Pydantic v2, pytest + httpx(TestClient), Docker Compose + Tailscale Funnel(배포 — 팀 미니서버에 백엔드+Postgres를 컨테이너로 올리고, Funnel로 API 포트만 공개)
 
 ## Global Constraints
 
 - DB 마이그레이션 도구 없음 — 앱 시작 시 `Base.metadata.create_all()`로 스키마 생성 (해커톤 속도 우선, Alembic 미사용)
+- 배포 대상은 팀 미니서버(자체 호스팅)다. Postgres는 같은 서버에 Docker 컨테이너로 띄우고, API(8000번 포트)만 Tailscale Funnel로 공개한다. DB 포트(5432)는 절대 공개하지 않는다
 - 인증 없음 — 모든 엔드포인트는 공개. 조교 보호는 프론트엔드 URL 비공개로만 처리
 - CORS: 모든 origin 허용 (해커톤 기간 한정 완화 설정)
 - 테스트 DB: SQLite in-memory (`StaticPool`) — Postgres와 별도 설치 없이 빠르게 실행
@@ -779,16 +780,17 @@ git push
 
 ---
 
-### Task 5: 시드 데이터 + Railway 배포
+### Task 5: 시드 데이터 + Docker 배포 (팀 미니서버 + Tailscale Funnel)
 
 **Files:**
 - Create: `backend/app/seed.py`
-- Create: `backend/Procfile`
+- Create: `backend/Dockerfile`
+- Create: `backend/docker-compose.yml`
 - Test: `backend/tests/test_seed.py`
 
 **Interfaces:**
 - Consumes: `models.Equipment`, `SessionLocal`, `Base`, `engine` (Task 1, 2)
-- Produces: `seed(db: Session) -> int` — 시드 함수 (몇 개 넣었는지 반환, 이미 데이터 있으면 0), Railway에 배포된 공개 URL
+- Produces: `seed(db: Session) -> int` — 시드 함수 (몇 개 넣었는지 반환, 이미 데이터 있으면 0), 미니서버에서 Tailscale Funnel로 공개된 API URL (`https://<기기이름>.<tailnet>.ts.net`)
 
 - [ ] **Step 1: 실패하는 테스트 작성**
 
@@ -862,43 +864,105 @@ if __name__ == "__main__":
 Run: `pytest tests/ -v`
 Expected: PASS (전체)
 
-- [ ] **Step 5: Procfile 작성 (Railway 시작 명령)**
+- [ ] **Step 5: Dockerfile 작성**
 
-```
-web: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+```dockerfile
+# backend/Dockerfile
+FROM python:3.11-slim
+
+WORKDIR /app
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY app ./app
+
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
 ```
 
-- [ ] **Step 6: 커밋**
+- [ ] **Step 6: docker-compose.yml 작성 (API + Postgres)**
+
+```yaml
+# backend/docker-compose.yml
+version: "3.9"
+
+services:
+  db:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    ports:
+      - "127.0.0.1:5432:5432"
+
+  api:
+    build: .
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/postgres
+    depends_on:
+      - db
+    ports:
+      - "8000:8000"
+
+volumes:
+  db_data:
+```
+
+`db` 포트는 `127.0.0.1`에만 바인딩해 로컬 디버깅 외 노출을 막는다. `api` 포트는 8000 전체 바인딩 — 이 포트만 Tailscale Funnel로 공개할 것이므로 괜찮다.
+
+- [ ] **Step 7: 커밋**
 
 ```bash
-git add backend/app/seed.py backend/Procfile backend/tests/test_seed.py
-git commit -m "[추가] 시드 데이터 스크립트 + Railway 배포 설정"
+git add backend/app/seed.py backend/Dockerfile backend/docker-compose.yml backend/tests/test_seed.py
+git commit -m "[추가] 시드 데이터 스크립트 + Docker 배포 설정"
 git push
 ```
 
-- [ ] **Step 7: Railway 배포**
+- [ ] **Step 8: 미니서버에서 컨테이너 실행**
+
+미니서버에 이 레포를 clone(또는 pull)한 뒤:
 
 ```bash
-railway login
-railway init
-railway add --database postgres
-railway up
+cd backend
+docker compose up -d --build
 ```
 
-- [ ] **Step 8: 배포 확인**
+- [ ] **Step 9: 로컬(서버 안)에서 헬스체크 확인**
 
 ```bash
-curl https://<railway-app-url>/health
+curl http://localhost:8000/health
 ```
 Expected: `{"status":"ok"}`
 
-- [ ] **Step 9: 배포 환경에 시드 데이터 주입**
+- [ ] **Step 10: 컨테이너 안에서 시드 데이터 주입**
 
 ```bash
-railway run python -m app.seed
+docker compose exec api python -m app.seed
 ```
 Expected: `6개 기자재를 추가했습니다.`
 
-- [ ] **Step 10: 배포 URL을 레포 루트 README.md에 기록**
+- [ ] **Step 11: Tailscale Funnel로 API 포트만 공개**
 
-`README.md`의 "링크" 섹션(또는 새 섹션)에 배포된 백엔드 URL을 적어 프론트엔드 담당자가 `VITE_API_BASE`로 바로 쓸 수 있게 한다.
+```bash
+sudo tailscale funnel 8000 on
+tailscale funnel status
+```
+
+정확한 명령 문법은 설치된 Tailscale 버전에 따라 다를 수 있으니 `tailscale funnel --help`로 최종 확인한다. **5432(DB) 포트는 절대 funnel하지 않는다.**
+
+- [ ] **Step 12: 공개 확인**
+
+다른 네트워크(예: 휴대폰 데이터, Tailscale 미설치 기기)에서:
+```bash
+curl https://<기기이름>.<tailnet>.ts.net/health
+```
+Expected: `{"status":"ok"}` — Tailscale 없이도 접속되면 성공
+
+- [ ] **Step 13: 배포 URL을 레포 루트 README.md에 기록**
+
+`README.md`의 "링크" 섹션(또는 새 섹션)에 Funnel URL을 적어 프론트엔드 담당자가 `VITE_API_BASE`로 바로 쓸 수 있게 한다.
