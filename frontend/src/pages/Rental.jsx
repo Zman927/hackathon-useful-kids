@@ -3,7 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { getEquipmentDetail } from "../api/equipmentApi";
 import { createRental } from "../api/rentalApi";
 import { useAuth } from "../context/AuthContext";
-import EmptyState from "../components/common/EmptyState";
+import LoginPromptModal from "../components/common/LoginPromptModal";
 
 function Rental() {
   const { id } = useParams();
@@ -17,19 +17,18 @@ function Rental() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!user) {
-      navigate("/login", { state: { from: `/rental/${id}` }, replace: true });
-    }
-  }, [user, id, navigate]);
-
-  useEffect(() => {
     getEquipmentDetail(id)
       .then(setEquipment)
       .catch(() => setEquipment(null));
   }, [id]);
 
   if (!user) {
-    return <EmptyState message="로그인이 필요합니다." />;
+    return (
+      <LoginPromptModal
+        onCancel={() => navigate(`/equipment/${id}`)}
+        onConfirm={() => navigate("/login", { state: { from: `/rental/${id}` } })}
+      />
+    );
   }
 
   const isDateOrderValid = !startDate || !endDate || endDate >= startDate;

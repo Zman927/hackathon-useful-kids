@@ -4,17 +4,19 @@ import { getEquipmentDetail } from "../api/equipmentApi";
 import { useAuth } from "../context/AuthContext";
 import Badge from "../components/common/Badge";
 import EmptyState from "../components/common/EmptyState";
+import LoginPromptModal from "../components/common/LoginPromptModal";
 
 function EquipmentDetail() {
   const { id } = useParams();
   const [equipment, setEquipment] = useState(null);
   const [error, setError] = useState("");
+  const [showLoginPrompt, setShowLoginPrompt] = useState(false);
   const { user } = useAuth();
   const navigate = useNavigate();
 
   function handleRentalClick() {
     if (!user) {
-      navigate("/login", { state: { from: `/rental/${id}` } });
+      setShowLoginPrompt(true);
       return;
     }
     navigate(`/rental/${id}`);
@@ -95,6 +97,15 @@ function EquipmentDetail() {
           </div>
         </div>
       </div>
+
+      {showLoginPrompt && (
+        <LoginPromptModal
+          onCancel={() => setShowLoginPrompt(false)}
+          onConfirm={() =>
+            navigate("/login", { state: { from: `/rental/${id}` } })
+          }
+        />
+      )}
     </div>
   );
 }
