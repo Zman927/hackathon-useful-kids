@@ -20,7 +20,7 @@ function Login() {
       login(userData);
       navigate(location.state?.from ?? "/", { replace: true });
     } catch (err) {
-      setError("학번 또는 비밀번호가 올바르지 않습니다.");
+      setError("아이디 또는 비밀번호가 올바르지 않습니다.");
     }
   }
 
@@ -50,7 +50,7 @@ function Login() {
               className="text-label-lg font-label-lg text-on-surface"
               htmlFor="student_id"
             >
-              학번 (Student ID)
+              아이디
             </label>
             <div className="relative w-full">
               <span className="material-symbols-outlined absolute left-sm top-1/2 -translate-y-1/2 text-outline">
@@ -61,7 +61,7 @@ function Login() {
                 name="student_id"
                 type="text"
                 required
-                placeholder="학번 8자리를 입력하세요"
+                placeholder="아이디를 입력하세요"
                 value={studentId}
                 onChange={(event) => setStudentId(event.target.value)}
                 className="h-12 w-full rounded border border-outline-variant bg-surface-container-lowest pr-sm pl-[40px] text-body-md font-body-md text-on-surface transition-all focus:border-primary focus:ring-2 focus:ring-primary-fixed focus:outline-none"
@@ -73,7 +73,7 @@ function Login() {
               className="text-label-lg font-label-lg text-on-surface"
               htmlFor="password"
             >
-              비밀번호 (Password)
+              비밀번호
             </label>
             <div className="relative w-full">
               <span className="material-symbols-outlined absolute left-sm top-1/2 -translate-y-1/2 text-outline">
@@ -93,13 +93,22 @@ function Login() {
           </div>
           <button
             type="submit"
-            className="mt-sm flex h-12 w-full items-center justify-center gap-xs rounded bg-primary-container text-label-lg font-label-lg text-on-primary transition-colors duration-200 hover:bg-primary"
+            className="mt-sm flex h-12 w-full items-center justify-center gap-xs rounded bg-primary-container text-label-lg font-label-lg text-on-primary transition-colors duration-200 hover:bg-primary cursor-pointer"
           >
             로그인
           </button>
           {error && (
             <p className="text-label-sm font-label-sm text-error">{error}</p>
           )}
+          <div className="mt-4 rounded-lg bg-blue-50/60 p-3 border border-blue-100 text-center">
+            <p className="text-xs text-gray-600">
+              💡 <span className="font-semibold">조교 계정 테스트</span>: 아이디에{" "}
+              <code className="rounded bg-white px-1.5 py-0.5 text-xs font-bold text-blue-700 border border-blue-200">
+                admin
+              </code>{" "}
+              입력 후 로그인
+            </p>
+          </div>
         </form>
       </div>
     </main>

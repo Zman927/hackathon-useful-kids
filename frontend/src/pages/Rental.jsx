@@ -44,7 +44,8 @@ function Rental() {
   }
 
   function increaseQuantity() {
-    setQuantity((current) => current + 1);
+    const max = equipment?.remainingQuantity ?? 99;
+    setQuantity((current) => Math.min(max, current + 1));
   }
 
   async function handleSubmit(event) {
@@ -95,6 +96,8 @@ function Rental() {
               </h2>
               <div className="flex items-center gap-sm text-label-sm font-label-sm text-on-surface-variant">
                 <span>분류: {equipment.category}</span>
+                <span>•</span>
+                <span>소속 학과: {equipment.departmentName}</span>
               </div>
             </div>
           </section>
@@ -146,32 +149,39 @@ function Rental() {
             <label className="text-label-lg font-label-lg text-on-surface">
               수량 <span className="text-error">*</span>
             </label>
-            <div className="flex w-fit items-center overflow-hidden rounded-lg border border-outline-variant transition-all focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20">
-              <button
-                type="button"
-                onClick={decreaseQuantity}
-                className="flex h-10 w-10 items-center justify-center border-r border-outline-variant text-on-surface-variant transition-colors hover:bg-surface-container-low"
-              >
-                <span className="material-symbols-outlined text-[20px]">
-                  remove
+            <div className="flex items-center gap-3">
+              <div className="flex w-fit items-center overflow-hidden rounded-lg border border-outline-variant transition-all focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20">
+                <button
+                  type="button"
+                  onClick={decreaseQuantity}
+                  className="flex h-10 w-10 items-center justify-center border-r border-outline-variant text-on-surface-variant transition-colors hover:bg-surface-container-low cursor-pointer"
+                >
+                  <span className="material-symbols-outlined text-[20px]">
+                    remove
+                  </span>
+                </button>
+                <input
+                  type="number"
+                  min="1"
+                  readOnly
+                  value={quantity}
+                  className="h-10 w-16 border-none bg-transparent text-center text-body-md font-body-md text-on-surface focus:ring-0"
+                />
+                <button
+                  type="button"
+                  onClick={increaseQuantity}
+                  className="flex h-10 w-10 items-center justify-center border-l border-outline-variant text-on-surface-variant transition-colors hover:bg-surface-container-low cursor-pointer"
+                >
+                  <span className="material-symbols-outlined text-[20px]">
+                    add
+                  </span>
+                </button>
+              </div>
+              {equipment && (
+                <span className="text-sm font-semibold text-gray-700 bg-gray-100 px-3 py-1.5 rounded-lg border border-gray-200">
+                  남은 수량: <strong className="text-blue-600">{equipment.remainingQuantity ?? 5}</strong>개
                 </span>
-              </button>
-              <input
-                type="number"
-                min="1"
-                readOnly
-                value={quantity}
-                className="h-10 w-16 border-none bg-transparent text-center text-body-md font-body-md text-on-surface focus:ring-0"
-              />
-              <button
-                type="button"
-                onClick={increaseQuantity}
-                className="flex h-10 w-10 items-center justify-center border-l border-outline-variant text-on-surface-variant transition-colors hover:bg-surface-container-low"
-              >
-                <span className="material-symbols-outlined text-[20px]">
-                  add
-                </span>
-              </button>
+              )}
             </div>
           </div>
 

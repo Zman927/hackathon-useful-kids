@@ -8,6 +8,7 @@ import EquipmentCard from "../components/equipment/EquipmentCard";
 import { DEPARTMENTS } from "../components/equipment/DepartmentSelect";
 import AppHeader from "../components/layout/AppHeader";
 import EmptyState from "../components/common/EmptyState";
+import AddEquipmentModal from "../components/equipment/AddEquipmentModal";
 
 const TREND_ICONS = ["fa-flask", "fa-microscope", "fa-blender"];
 
@@ -18,7 +19,16 @@ function Home() {
   const [error, setError] = useState("");
   const [dueSoonRental, setDueSoonRental] = useState(null);
   const [searchText, setSearchText] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("전체");
+  const [showAddModal, setShowAddModal] = useState(false);
   const navigate = useNavigate();
+
+  const isTA =
+    user &&
+    (user.role === "admin" ||
+      user.userId?.toLowerCase().includes("admin") ||
+      user.userId?.toLowerCase().includes("ta") ||
+      user.userName?.includes("조교"));
 
   useEffect(() => {
     if (!selectedDepartmentId) {
@@ -52,9 +62,27 @@ function Home() {
     (department) => department.id === selectedDepartmentId,
   )?.name;
   const trendingEquipment = equipmentList.slice(0, 3);
-  const filteredEquipmentList = equipmentList.filter((equipment) =>
-    equipment.name.toLowerCase().includes(searchText.trim().toLowerCase()),
-  );
+
+  const CATEGORIES = [
+    "전체",
+    "카메라/영상",
+    "오디오",
+    "IT 기기",
+    "계측기",
+    "드론/로보틱스",
+    "마이크로컨트롤러",
+  ];
+
+  const filteredEquipmentList = equipmentList.filter((equipment) => {
+    const matchesSearch = equipment.name
+      .toLowerCase()
+      .includes(searchText.trim().toLowerCase());
+    const matchesCategory =
+      !user ||
+      selectedCategory === "전체" ||
+      equipment.category === selectedCategory;
+    return matchesSearch && matchesCategory;
+  });
 
   return (
     <div className="bg-[#f4f5f7] text-gray-800 antialiased">
@@ -97,9 +125,6 @@ function Home() {
                 까지입니다.
               </p>
             </div>
-            <button className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50">
-              반납 연장 신청
-            </button>
           </div>
         )}
 
@@ -135,48 +160,83 @@ function Home() {
           </section>
         )}
 
-        <div className="mt-8 mb-6 flex justify-end gap-2">
-          <button className="rounded-full bg-home-primary px-5 py-1.5 text-sm font-medium text-white shadow-sm">
-            전체
-          </button>
-          <button className="rounded-full border border-gray-300 bg-white px-4 py-1.5 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50">
-            카메라/영상
-          </button>
-          <button className="rounded-full border border-gray-300 bg-white px-4 py-1.5 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50">
-            오디오
-          </button>
-          <button className="rounded-full border border-gray-300 bg-white px-4 py-1.5 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50">
-            IT 기기
-          </button>
-        </div>
-
-        {!selectedDepartmentId && <EmptyState message="학과를 선택해주세요." />}
-
-        {selectedDepartmentId && error && <EmptyState message={error} />}
-
-        {selectedDepartmentId && !error && equipmentList.length === 0 && (
-          <EmptyState message="대여 가능한 기자재가 없습니다." />
-        )}
-
-        {selectedDepartmentId &&
-          !error &&
-          equipmentList.length > 0 &&
-          filteredEquipmentList.length === 0 && (
-            <EmptyState message="검색 결과가 없습니다." />
+        <section className="mt-10 md:mt-12">
+          {selectedDepartmentId && (
+            <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <h2 className="text-xl font-bold text-gray-900">
+                {departmentName} 전체 기자재 목록
+              </h2>
+              {user && (
+                <div className="flex flex-wrap gap-2">
+                  {CATEGORIES.map((category) => (
+                    <button
+                      key={category}
+                      onClick={() => setSelectedCategory(category)}
+                      className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors cursor-pointer ${
+                        selectedCategory === category
+                          ? "bg-home-primary text-white shadow-sm"
+                          : "border border-gray-300 bg-white text-gray-600 hover:bg-gray-50"
+                      }`}
+                    >
+                      {category}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           )}
 
-        {selectedDepartmentId && !error && filteredEquipmentList.length > 0 && (
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {filteredEquipmentList.map((equipment) => (
-              <EquipmentCard
-                key={equipment.id}
-                equipment={equipment}
-                onClick={() => navigate(`/equipment/${equipment.id}`)}
-              />
-            ))}
-          </div>
-        )}
+          {!selectedDepartmentId && <EmptyState message="학과를 선택해주세요." />}
+
+          {selectedDepartmentId && error && <EmptyState message={error} />}
+
+          {selectedDepartmentId && !error && equipmentList.length === 0 && (
+            <EmptyState message="대여 가능한 기자재가 없습니다." />
+          )}
+
+          {selectedDepartmentId &&
+            !error &&
+            equipmentList.length > 0 &&
+            filteredEquipmentList.length === 0 && (
+              <EmptyState message="검색 결과가 없습니다." />
+            )}
+
+          {selectedDepartmentId && !error && filteredEquipmentList.length > 0 && (
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {filteredEquipmentList.map((equipment) => (
+                <EquipmentCard
+                  key={equipment.id}
+                  equipment={equipment}
+                  onClick={() => navigate(`/equipment/${equipment.id}`)}
+                />
+              ))}
+            </div>
+          )}
+        </section>
       </main>
+
+      {isTA && (
+        <button
+          type="button"
+          onClick={() => setShowAddModal(true)}
+          title="기자재 신규 등록"
+          className="fixed bottom-8 right-8 z-40 flex h-14 w-14 cursor-pointer items-center justify-center rounded-full bg-blue-600 text-white shadow-2xl transition-all duration-200 hover:bg-blue-700 hover:scale-110 active:scale-95 focus:outline-none"
+        >
+          <i className="fa-solid fa-plus text-2xl" />
+        </button>
+      )}
+
+      {showAddModal && (
+        <AddEquipmentModal
+          initialDepartmentId={selectedDepartmentId}
+          onClose={() => setShowAddModal(false)}
+          onSuccess={() => {
+            if (selectedDepartmentId) {
+              getEquipmentList(selectedDepartmentId).then(setEquipmentList);
+            }
+          }}
+        />
+      )}
     </div>
   );
 }

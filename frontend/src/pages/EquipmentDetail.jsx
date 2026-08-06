@@ -63,7 +63,7 @@ function EquipmentDetail() {
         <div className="flex flex-col md:col-span-5">
           <div className="mb-md">
             <div className="mb-sm flex items-center justify-between">
-              <span className="text-label-sm font-label-sm tracking-wider text-primary uppercase">
+              <span className="text-label-sm font-label-sm tracking-wider text-primary uppercase font-bold">
                 {equipment.category}
               </span>
               <Badge
@@ -74,6 +74,12 @@ function EquipmentDetail() {
             <h1 className="mb-xs text-headline-lg-mobile font-headline-lg-mobile text-on-surface md:text-headline-lg md:font-headline-lg">
               {equipment.name}
             </h1>
+            <div className="mt-1 mb-md">
+              <span className="inline-flex items-center gap-1 rounded bg-blue-50 px-2.5 py-1 text-xs font-bold text-blue-700 border border-blue-100">
+                <i className="fa-solid fa-graduation-cap text-xs" />
+                소속 학과: {equipment.departmentName}
+              </span>
+            </div>
             <p className="mt-sm text-body-lg font-body-lg leading-relaxed text-on-surface-variant">
               {equipment.description}
             </p>
