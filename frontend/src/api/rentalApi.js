@@ -3,6 +3,14 @@ import { mockEquipmentList, mockRentals } from "./mockData";
 
 const USE_MOCK = import.meta.env.VITE_USE_MOCK === "true";
 
+function todayLocalDateString() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
 function toRental(raw) {
   return {
     id: raw.id,
@@ -35,7 +43,7 @@ export async function createRental(payload) {
       quantity: payload.quantity,
       purpose: payload.purpose,
       status: "pending",
-      createdAt: new Date().toISOString().slice(0, 10),
+      createdAt: todayLocalDateString(),
     };
     mockRentals.unshift(newRental);
     return newRental;
