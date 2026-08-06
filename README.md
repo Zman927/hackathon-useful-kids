@@ -6,9 +6,9 @@
 
 | 이름 | 역할 |
 |---|---|
-| Jorden | TBD |
-| 박범근 | TBD |
-| 허정주 | TBD |
+| Jorden | Documents |
+| 박범근 | Backend |
+| 허정주 | Frontend |
 
 ## 프로젝트
 
