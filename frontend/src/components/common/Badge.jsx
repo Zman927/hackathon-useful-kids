@@ -1,24 +1,17 @@
-const VARIANT_STYLES = {
-  available: { background: "#e6f4ea", color: "#1e7e34" },
-  unavailable: { background: "#fdecea", color: "#c0392b" },
-  pending: { background: "#fff8e1", color: "#b58105" },
-  rented: { background: "#e8f0fe", color: "#1a56db" },
-  returned: { background: "#eceff1", color: "#546e7a" },
+const VARIANT_CLASSES = {
+  available: "bg-badge-active-bg text-badge-active-text",
+  unavailable: "bg-badge-pending-bg text-badge-pending-text",
+  pending: "bg-badge-pending-bg text-badge-pending-text",
+  rented: "bg-badge-active-bg text-badge-active-text",
+  returned: "bg-badge-completed-bg text-badge-completed-text",
 };
 
 function Badge({ label, variant }) {
-  const style = VARIANT_STYLES[variant] || VARIANT_STYLES.pending;
+  const classes = VARIANT_CLASSES[variant] || VARIANT_CLASSES.pending;
 
   return (
     <span
-      style={{
-        display: "inline-block",
-        padding: "2px 8px",
-        borderRadius: "12px",
-        fontSize: "12px",
-        fontWeight: 600,
-        ...style,
-      }}
+      className={`inline-flex items-center rounded-full px-sm py-xs text-label-sm font-label-sm whitespace-nowrap ${classes}`}
     >
       {label}
     </span>

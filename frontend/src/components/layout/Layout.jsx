@@ -3,9 +3,9 @@ import Header from "./Header";
 
 function Layout() {
   return (
-    <div>
+    <div className="min-h-screen bg-background">
       <Header />
-      <main style={{ padding: "24px" }}>
+      <main className="mx-auto w-full max-w-[1200px] px-gutter pt-[96px] pb-xl md:px-xl">
         <Outlet />
       </main>
     </div>

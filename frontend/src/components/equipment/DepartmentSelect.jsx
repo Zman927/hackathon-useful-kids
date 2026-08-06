@@ -16,7 +16,11 @@ function DepartmentSelect() {
   }
 
   return (
-    <select value={selectedDepartmentId ?? ""} onChange={handleChange}>
+    <select
+      value={selectedDepartmentId ?? ""}
+      onChange={handleChange}
+      className="hidden rounded-lg border border-outline-variant bg-surface-container-lowest px-sm py-xs text-label-lg font-label-lg text-on-surface-variant transition-colors hover:text-primary focus:border-primary focus:outline-none md:block"
+    >
       <option value="">학과 선택</option>
       {DEPARTMENTS.map((department) => (
         <option key={department.id} value={department.id}>
