@@ -19,7 +19,13 @@ function Rental() {
       .catch(() => setEquipment(null));
   }, [id]);
 
-  const isValid = startDate && endDate && quantity > 0 && purpose.trim() !== "";
+  const isDateOrderValid = !startDate || !endDate || endDate >= startDate;
+  const isValid =
+    startDate &&
+    endDate &&
+    isDateOrderValid &&
+    quantity > 0 &&
+    purpose.trim() !== "";
 
   function decreaseQuantity() {
     setQuantity((current) => Math.max(1, current - 1));
@@ -111,10 +117,16 @@ function Rental() {
                 id="end_date"
                 type="date"
                 required
+                min={startDate || undefined}
                 value={endDate}
                 onChange={(event) => setEndDate(event.target.value)}
                 className="w-full rounded-lg border border-outline-variant bg-surface-container-lowest px-md py-sm text-body-md font-body-md text-on-surface transition-all outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
               />
+              {!isDateOrderValid && (
+                <p className="text-label-sm font-label-sm text-error">
+                  반납 예정일은 대여 시작일보다 빠를 수 없습니다.
+                </p>
+              )}
             </div>
           </div>
 
