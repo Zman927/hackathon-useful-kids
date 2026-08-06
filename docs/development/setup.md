@@ -27,10 +27,10 @@ brew services start postgresql@16
 
 ```bash
 psql -U postgres
-CREATE DATABASE hackathon_db;
+CREATE DATABASE equipment_rental;
 ```
 
-이미 있는 `postgres` 계정을 그대로 써도 되고, 별도 계정을 만들어도 된다 — `backend/.env`에 실제 값만 맞춰주면 된다.
+이미 있는 `postgres` 계정을 그대로 써도 되고, 별도 계정을 만들어도 된다 — `backend/.env`의 `DATABASE_URL`에 실제 값만 맞춰주면 된다.
 
 ## 2. Backend 실행
 
@@ -69,11 +69,10 @@ npm run dev
 ### backend/.env
 
 ```
-POSTGRES_HOST=localhost
-POSTGRES_PORT=5432
-POSTGRES_DB=hackathon_db
-POSTGRES_USER=postgres
-POSTGRES_PASSWORD=<본인이 설정한 비밀번호>
+DATABASE_URL=postgresql+asyncpg://postgres:<본인이 설정한 비밀번호>@localhost:5432/equipment_rental
+SECRET_KEY=<임의의 랜덤 문자열>
+ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRE_MINUTES=60
 ```
 
 ### frontend/.env
@@ -109,11 +108,11 @@ VITE_API_BASE_URL=http://localhost:8000
 
 ## 7. Troubleshooting
 
-**`psycopg` 연결 오류 (`could not connect to server`)**
+**`asyncpg` 연결 오류 (`could not connect to server`)**
 → PostgreSQL 서비스가 실행 중인지 확인. Windows는 서비스 관리자에서 `postgresql-x64-16` 상태 확인, macOS는 `brew services list`.
 
 **`password authentication failed`**
-→ `backend/.env`의 `POSTGRES_PASSWORD`가 실제 설치 시 설정한 비밀번호와 다름. 재설정하거나 `.env`를 맞춘다.
+→ `backend/.env`의 `DATABASE_URL`에 들어간 비밀번호가 실제 설치 시 설정한 비밀번호와 다름. 재설정하거나 `.env`를 맞춘다.
 
 **프론트에서 API 호출이 전부 실패 (`Failed to fetch` / `Network Error`)**
 → 1) 백엔드가 켜져 있는지, 2) `VITE_API_BASE_URL`이 맞는 주소인지, 3) 팀원 컴퓨터라면 Tailscale이 둘 다 연결돼 있는지 순서로 확인.
