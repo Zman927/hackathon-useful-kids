@@ -1,6 +1,6 @@
 # 기자재 대여 플랫폼 — 백엔드 API Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> 이 문서는 TDD 방식 구현 계획입니다. Task 순서대로, 각 Step의 체크박스(`- [ ]`)를 따라 진행하세요.
 
 **Goal:** 공학관 기자재 대여를 위한 REST API를 만든다. 학생은 학과별 재고를 조회하고 대여를 신청하고, 조교는 신청을 승인·반려하고 반납을 처리한다.
 

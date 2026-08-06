@@ -1,6 +1,6 @@
 # 기자재 대여 플랫폼 — 프론트엔드 UI Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> 이 문서는 TDD 방식 구현 계획입니다. Task 순서대로, 각 Step의 체크박스(`- [ ]`)를 따라 진행하세요.
 
 **Goal:** 학생이 학과별 기자재를 조회하고 대여를 신청하며, 조교가 신청을 승인·반려·반납 처리할 수 있는 화면을 만든다.
 
@@ -12,7 +12,7 @@
 
 - 백엔드 API 베이스 URL은 환경변수 `VITE_API_BASE`로 주입한다 (로컬 기본값: `http://localhost:8000`, 팀원 컴퓨터의 백엔드에 붙일 땐 그 컴퓨터의 Tailscale IP)
 - **배포하지 않는다.** 심사위원 원격 접속이 필요 없어(제출물은 github + 현장 시연) Vercel 등 공개 호스팅이 불필요하다
-- API 계약은 `docs/superpowers/plans/2026-08-06-backend-api-plan.md`에 정의된 엔드포인트를 그대로 따른다: `GET /departments`, `GET /equipment?department=`, `POST /rentals`, `GET /rentals?status=`, `PATCH /rentals/{id}/approve|reject|return`
+- API 계약은 `docs/plans/2026-08-06-backend-api-plan.md`에 정의된 엔드포인트를 그대로 따른다: `GET /departments`, `GET /equipment?department=`, `POST /rentals`, `GET /rentals?status=`, `PATCH /rentals/{id}/approve|reject|return`
 - 인증 없음 — 백엔드와 동일한 MVP 범위
 - 모든 화면은 로딩 상태 / 빈 리스트 안내 / 에러 메시지를 반드시 포함한다 (제출 전 체크리스트의 "겉보기 완성도" 항목)
 - 커밋 메시지는 레포 루트 `README.md`의 `[타입] 내용` 규칙을 따른다

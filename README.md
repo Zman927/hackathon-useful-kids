@@ -51,9 +51,26 @@
 - 완성될 때까지 기다리지 말고, 작업하다 끊기는 지점마다 커밋한다.
 - **하루에 최소 한 번은 push.** 다른 사람이 내 작업을 이어받을 수 있는 상태를 유지하는 게 목적.
 
+## 📚 Project Documentation
+
+- [1. 제품 요구사항 정의서 (PRD)](./docs/01-prd.md)
+- [2. 기능 명세서](./docs/02-spec.md)
+- [3. 시스템 아키텍처 & 플로우](./docs/03-architecture.md)
+- [4. API 명세서](./docs/04-api-spec.md)
+- [5. ERD 명세서](./docs/05-erd.md)
+
+개발 진행 중 채워짐. 구현 순서·TDD 태스크 같은 개발용 상세는 `docs/plans/`, 팀 협업·역할 분담은 `협업가이드.md` 참고.
+
 ## 폴더 구조
 
 ```
-frontend/   React 앱
-backend/    FastAPI 앱
+frontend/       React 앱
+backend/        FastAPI 앱
+docs/
+  01-prd.md            제품 요구사항 정의서
+  02-spec.md           기능 명세서
+  03-architecture.md   시스템 아키텍처 & 플로우
+  04-api-spec.md       API 명세서
+  05-erd.md            ERD 및 테이블 정의서
+  plans/               구현 계획 (TDD 태스크 단위, 개발용)
 ```
