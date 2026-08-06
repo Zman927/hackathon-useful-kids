@@ -1,6 +1,6 @@
 import { useApp } from "../../context/AppContext";
 
-const DEPARTMENTS = [
+export const DEPARTMENTS = [
   { id: 1, name: "컴퓨터공학과" },
   { id: 2, name: "전자공학과" },
   { id: 3, name: "기계공학과" },
@@ -19,7 +19,7 @@ function DepartmentSelect() {
     <select
       value={selectedDepartmentId ?? ""}
       onChange={handleChange}
-      className="hidden rounded-lg border border-outline-variant bg-surface-container-lowest px-sm py-xs text-label-lg font-label-lg text-on-surface-variant transition-colors hover:text-primary focus:border-primary focus:outline-none md:block"
+      className="border-none bg-transparent text-headline-md font-headline-md font-bold text-on-surface outline-none focus:ring-0"
     >
       <option value="">학과 선택</option>
       {DEPARTMENTS.map((department) => (
