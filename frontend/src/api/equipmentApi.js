@@ -60,7 +60,7 @@ export async function addEquipment(payload) {
       id: Date.now(),
       name: payload.name,
       imageUrl:
-        payload.imageUrl ||
+        (payload.imageFile && URL.createObjectURL(payload.imageFile)) ||
         "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=800&auto=format&fit=crop&q=60",
       category: payload.category,
       description: payload.description || "",
@@ -73,16 +73,17 @@ export async function addEquipment(payload) {
     return toEquipment(newEquipment);
   }
 
+  const formData = new FormData();
+  formData.append("name", payload.name);
+  formData.append("department_id", String(Number(payload.departmentId)));
+  formData.append("total_quantity", String(Number(payload.totalQuantity)));
+  if (payload.category) formData.append("category", payload.category);
+  if (payload.description) formData.append("description", payload.description);
+  if (payload.imageFile) formData.append("image", payload.imageFile);
+
   const data = await request("/equipment", {
     method: "POST",
-    body: JSON.stringify({
-      name: payload.name,
-      image_url: payload.imageUrl,
-      category: payload.category,
-      description: payload.description,
-      department_id: Number(payload.departmentId),
-      total_quantity: Number(payload.totalQuantity),
-    }),
+    body: formData,
   });
 
   return toEquipment(data);

@@ -19,10 +19,17 @@ function AddEquipmentModal({ onClose, onSuccess, initialDepartmentId }) {
   );
   const [category, setCategory] = useState(CATEGORIES[0]);
   const [totalQuantity, setTotalQuantity] = useState(1);
-  const [imageUrl, setImageUrl] = useState("");
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreviewUrl, setImagePreviewUrl] = useState("");
   const [description, setDescription] = useState("");
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  function handleImageChange(event) {
+    const file = event.target.files?.[0] ?? null;
+    setImageFile(file);
+    setImagePreviewUrl(file ? URL.createObjectURL(file) : "");
+  }
 
   async function handleSubmit(event) {
     event.preventDefault();
@@ -39,7 +46,7 @@ function AddEquipmentModal({ onClose, onSuccess, initialDepartmentId }) {
         departmentId,
         category,
         totalQuantity,
-        imageUrl: imageUrl.trim(),
+        imageFile,
         description: description.trim(),
       });
       onSuccess(added);
@@ -144,15 +151,21 @@ function AddEquipmentModal({ onClose, onSuccess, initialDepartmentId }) {
 
           <div>
             <label className="mb-1 block text-sm font-semibold text-gray-700">
-              이미지 URL (선택)
+              사진 (선택)
             </label>
             <input
-              type="url"
-              placeholder="https://... (미입력 시 기본 이미지 적용)"
-              value={imageUrl}
-              onChange={(e) => setImageUrl(e.target.value)}
-              className="w-full rounded-lg border border-gray-300 px-3.5 py-2.5 text-sm text-gray-800 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/gif"
+              onChange={handleImageChange}
+              className="w-full rounded-lg border border-gray-300 px-3.5 py-2.5 text-sm text-gray-800 file:mr-3 file:rounded-md file:border-0 file:bg-blue-50 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-blue-700 hover:file:bg-blue-100 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
             />
+            {imagePreviewUrl && (
+              <img
+                src={imagePreviewUrl}
+                alt="미리보기"
+                className="mt-2 h-24 w-24 rounded-lg border border-gray-200 object-cover"
+              />
+            )}
           </div>
 
           <div>

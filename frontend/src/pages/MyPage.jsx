@@ -170,11 +170,11 @@ function MyPage() {
             ) : isTA ? (
               <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
                 <div className="grid grid-cols-12 gap-3 bg-gray-50/80 border-b border-gray-200 p-4 text-xs font-bold tracking-wider text-gray-500 uppercase">
-                  <div className="col-span-2.5">STUDENT</div>
+                  <div className="col-span-3">STUDENT</div>
                   <div className="col-span-2">DEPARTMENT</div>
                   <div className="col-span-3">EQUIPMENT NAME</div>
                   <div className="col-span-2">RENTAL PERIOD</div>
-                  <div className="col-span-1.5">REQUEST DATE</div>
+                  <div className="col-span-1">REQUEST DATE</div>
                   <div className="col-span-1 text-right">ACTIONS</div>
                 </div>
                 {filteredRentals.map((rental) => (

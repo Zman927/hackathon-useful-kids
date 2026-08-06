@@ -1,4 +1,4 @@
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
+export const BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
 const AUTH_STORAGE_KEY = "auth_user";
 
 function getAuthToken() {
@@ -16,18 +16,25 @@ function getAuthToken() {
 
 export async function request(path, options = {}) {
   const token = getAuthToken();
+  const { headers: customHeaders, body, ...restOptions } = options;
+  const isFormData = body instanceof FormData;
 
   const response = await fetch(`${BASE_URL}${path}`, {
+    ...restOptions,
+    body,
     headers: {
-      "Content-Type": "application/json",
+      ...(isFormData ? {} : { "Content-Type": "application/json" }),
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...options.headers,
+      ...customHeaders,
     },
-    ...options,
   });
 
   if (!response.ok) {
-    throw new Error(`API request failed: ${response.status} ${response.statusText}`);
+    const detail = await response
+      .json()
+      .then((data) => data.detail)
+      .catch(() => null);
+    throw new Error(detail || `API request failed: ${response.status} ${response.statusText}`);
   }
 
   if (response.status === 204) {

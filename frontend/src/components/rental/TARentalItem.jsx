@@ -21,25 +21,27 @@ function TARentalItem({ rental, onApprove, onReject }) {
   return (
     <div className="grid grid-cols-12 items-center gap-3 border-b border-gray-100 p-4 transition-colors hover:bg-gray-50/50 last:border-0">
       {/* STUDENT */}
-      <div className="col-span-2.5 flex items-center gap-3">
+      <div className="col-span-3 flex items-center gap-3 min-w-0">
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-100 text-xs font-bold text-blue-700">
           {getAvatarInitials(rental.studentName)}
         </div>
-        <div className="overflow-hidden">
-          <h4 className="text-sm font-bold text-gray-900 truncate">
+        <div className="min-w-0 overflow-hidden">
+          <h4 className="text-sm font-bold text-gray-900 truncate" title={rental.studentName}>
             {rental.studentName}
           </h4>
-          <p className="text-xs text-gray-500 font-mono">{rental.studentId}</p>
+          <p className="truncate text-xs text-gray-500 font-mono" title={rental.studentId}>
+            {rental.studentId}
+          </p>
         </div>
       </div>
 
       {/* DEPARTMENT */}
-      <div className="col-span-2 text-sm font-medium text-gray-700 truncate">
+      <div className="col-span-2 truncate text-sm font-medium text-gray-700" title={rental.studentDepartment || rental.departmentName}>
         {rental.studentDepartment || rental.departmentName}
       </div>
 
       {/* EQUIPMENT NAME & PURPOSE */}
-      <div className="col-span-3 flex items-center gap-3">
+      <div className="col-span-3 flex min-w-0 items-center gap-3">
         <img
           src={rental.equipmentImageUrl}
           alt={rental.equipmentName}
@@ -79,7 +81,7 @@ function TARentalItem({ rental, onApprove, onReject }) {
       </div>
 
       {/* REQUEST DATE */}
-      <div className="col-span-1.5 text-xs text-gray-500 font-medium">
+      <div className="col-span-1 text-xs text-gray-500 font-medium">
         {rental.createdAt}
       </div>
 

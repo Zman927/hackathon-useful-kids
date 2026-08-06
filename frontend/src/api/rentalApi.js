@@ -39,7 +39,7 @@ function toRental(raw) {
     quantity: raw.quantity,
     purpose: raw.purpose,
     status: raw.status,
-    createdAt: raw.created_at ?? raw.createdAt,
+    createdAt: (raw.created_at ?? raw.createdAt ?? "").slice(0, 10),
   };
 }
 
