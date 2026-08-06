@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { login as loginRequest } from "../api/authApi";
 
@@ -9,6 +9,7 @@ function Login() {
   const [error, setError] = useState("");
   const { login } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   async function handleSubmit(event) {
     event.preventDefault();
@@ -17,7 +18,7 @@ function Login() {
     try {
       const userData = await loginRequest(studentId, password);
       login(userData);
-      navigate("/");
+      navigate(location.state?.from ?? "/", { replace: true });
     } catch (err) {
       setError("학번 또는 비밀번호가 올바르지 않습니다.");
     }

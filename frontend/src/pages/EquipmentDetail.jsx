@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { getEquipmentDetail } from "../api/equipmentApi";
+import { useAuth } from "../context/AuthContext";
 import Badge from "../components/common/Badge";
 import EmptyState from "../components/common/EmptyState";
 
@@ -8,7 +9,16 @@ function EquipmentDetail() {
   const { id } = useParams();
   const [equipment, setEquipment] = useState(null);
   const [error, setError] = useState("");
+  const { user } = useAuth();
   const navigate = useNavigate();
+
+  function handleRentalClick() {
+    if (!user) {
+      navigate("/login", { state: { from: `/rental/${id}` } });
+      return;
+    }
+    navigate(`/rental/${id}`);
+  }
 
   useEffect(() => {
     setError("");
@@ -74,7 +84,7 @@ function EquipmentDetail() {
           <div className="rounded-xl border border-secondary-fixed bg-surface-container-lowest p-md shadow-sm">
             <button
               disabled={!equipment.isAvailable}
-              onClick={() => navigate(`/rental/${equipment.id}`)}
+              onClick={handleRentalClick}
               className="flex w-full items-center justify-center gap-sm rounded-lg bg-primary-container px-lg py-sm text-label-lg font-label-lg text-on-primary shadow-sm transition-colors hover:bg-primary active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-surface-variant disabled:text-outline disabled:active:scale-100"
             >
               <span className="material-symbols-outlined">

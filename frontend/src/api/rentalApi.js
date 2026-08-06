@@ -24,7 +24,7 @@ export async function createRental(payload) {
     const equipment = mockEquipmentList.find(
       (item) => item.id === Number(payload.equipmentId),
     );
-    return {
+    const newRental = {
       id: Date.now(),
       equipmentId: Number(payload.equipmentId),
       equipmentName: equipment?.name ?? "기자재",
@@ -37,6 +37,8 @@ export async function createRental(payload) {
       status: "pending",
       createdAt: new Date().toISOString().slice(0, 10),
     };
+    mockRentals.unshift(newRental);
+    return newRental;
   }
 
   const data = await request("/rentals", {

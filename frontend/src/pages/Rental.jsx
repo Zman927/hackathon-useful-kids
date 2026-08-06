@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { getEquipmentDetail } from "../api/equipmentApi";
 import { createRental } from "../api/rentalApi";
+import { useAuth } from "../context/AuthContext";
+import EmptyState from "../components/common/EmptyState";
 
 function Rental() {
   const { id } = useParams();
@@ -11,13 +13,24 @@ function Rental() {
   const [quantity, setQuantity] = useState(1);
   const [purpose, setPurpose] = useState("");
   const [error, setError] = useState("");
+  const { user } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!user) {
+      navigate("/login", { state: { from: `/rental/${id}` }, replace: true });
+    }
+  }, [user, id, navigate]);
 
   useEffect(() => {
     getEquipmentDetail(id)
       .then(setEquipment)
       .catch(() => setEquipment(null));
   }, [id]);
+
+  if (!user) {
+    return <EmptyState message="로그인이 필요합니다." />;
+  }
 
   const isDateOrderValid = !startDate || !endDate || endDate >= startDate;
   const isValid =
@@ -57,7 +70,7 @@ function Rental() {
     <div className="mx-auto flex max-w-3xl flex-col gap-lg">
       <header className="flex items-center gap-sm">
         <button
-          onClick={() => navigate(-1)}
+          onClick={() => navigate(`/equipment/${id}`)}
           className="flex items-center rounded-full p-xs text-on-surface-variant transition-colors hover:bg-surface-container-low"
         >
           <span className="material-symbols-outlined">arrow_back</span>
@@ -186,7 +199,7 @@ function Rental() {
           <div className="flex items-center justify-end gap-sm pt-sm">
             <button
               type="button"
-              onClick={() => navigate(-1)}
+              onClick={() => navigate(`/equipment/${id}`)}
               className="rounded-lg px-lg py-sm text-label-lg font-label-lg text-on-surface-variant transition-colors hover:bg-surface-container-low"
             >
               취소
