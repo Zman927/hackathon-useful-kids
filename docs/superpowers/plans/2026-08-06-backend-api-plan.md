@@ -4,14 +4,14 @@
 
 **Goal:** 공학관 기자재 대여를 위한 REST API를 만든다. 학생은 학과별 재고를 조회하고 대여를 신청하고, 조교는 신청을 승인·반려하고 반납을 처리한다.
 
-**Architecture:** FastAPI 단일 서비스 + PostgreSQL(배포)/SQLite(테스트). SQLAlchemy ORM으로 `Equipment`, `Rental` 두 테이블을 관리한다. 인증 없음 — 조교 화면은 프론트엔드에서 비공개 URL로만 보호한다(MVP 범위).
+**Architecture:** FastAPI 단일 서비스 + PostgreSQL(로컬 Docker 컨테이너)/SQLite(테스트). SQLAlchemy ORM으로 `Equipment`, `Rental` 두 테이블을 관리한다. 인증 없음 — 조교 화면은 프론트엔드에서 비공개 URL로만 보호한다(MVP 범위). **별도 배포 없음** — 개발 중 쓰던 로컬 서버(uvicorn)를 Tailscale로 그대로 시연에 쓴다.
 
-**Tech Stack:** Python 3.11+, FastAPI, SQLAlchemy 2.x, Pydantic v2, pytest + httpx(TestClient), Docker Compose + Tailscale Funnel(배포 — 팀 미니서버에 백엔드+Postgres를 컨테이너로 올리고, Funnel로 API 포트만 공개)
+**Tech Stack:** Python 3.11+, FastAPI, SQLAlchemy 2.x, Pydantic v2, pytest + httpx(TestClient), Docker Compose(로컬 Postgres 실행용) + Tailscale(팀원·시연 간 네트워크 연결)
 
 ## Global Constraints
 
 - DB 마이그레이션 도구 없음 — 앱 시작 시 `Base.metadata.create_all()`로 스키마 생성 (해커톤 속도 우선, Alembic 미사용)
-- 배포 대상은 팀 미니서버(자체 호스팅)다. Postgres는 같은 서버에 Docker 컨테이너로 띄우고, API(8000번 포트)만 Tailscale Funnel로 공개한다. DB 포트(5432)는 절대 공개하지 않는다
+- **배포하지 않는다.** 심사위원이 원격으로 접속할 필요가 없어(제출물은 github + 현장 시연) 미니서버·퍼블릭 URL·Docker 이미지 빌드가 전부 불필요. 개발 중 쓰던 로컬 백엔드(uvicorn --reload)를 시연 당일에도 그대로 켜두고 Tailscale로 프론트와 연결한다
 - 인증 없음 — 모든 엔드포인트는 공개. 조교 보호는 프론트엔드 URL 비공개로만 처리
 - CORS: 모든 origin 허용 (해커톤 기간 한정 완화 설정)
 - 테스트 DB: SQLite in-memory (`StaticPool`) — Postgres와 별도 설치 없이 빠르게 실행
@@ -25,6 +25,7 @@
 
 **Files:**
 - Create: `backend/requirements.txt`
+- Create: `backend/docker-compose.yml` (Postgres 로컬 실행용 — 배포 아님)
 - Create: `backend/app/__init__.py`
 - Create: `backend/app/database.py`
 - Create: `backend/app/main.py`
@@ -62,6 +63,35 @@ pip install -r requirements.txt
 ```
 
 `backend/app/__init__.py`: 빈 파일로 생성.
+
+`backend/docker-compose.yml` (Postgres만 — API는 로컬에서 `uvicorn --reload`로 직접 실행하므로 컨테이너화하지 않는다):
+
+```yaml
+# backend/docker-compose.yml
+version: "3.9"
+
+services:
+  db:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    ports:
+      - "127.0.0.1:5432:5432"
+
+volumes:
+  db_data:
+```
+
+```bash
+docker compose up db -d
+```
+
+이 컨테이너를 각자 로컬에서 띄워 개발한다. `database.py`의 기본 `DATABASE_URL`이 이 설정과 그대로 맞아떨어진다.
 
 - [ ] **Step 2: database.py 작성**
 
@@ -180,7 +210,7 @@ Expected: PASS
 - [ ] **Step 8: 커밋**
 
 ```bash
-git add backend/requirements.txt backend/app backend/tests
+git add backend/requirements.txt backend/docker-compose.yml backend/app backend/tests
 git commit -m "[설정] FastAPI 프로젝트 셋업 + 헬스체크"
 git push
 ```
@@ -780,17 +810,15 @@ git push
 
 ---
 
-### Task 5: 시드 데이터 + Docker 배포 (팀 미니서버 + Tailscale Funnel)
+### Task 5: 시드 데이터 + 시연 연결 확인 (배포 없음, Tailscale만)
 
 **Files:**
 - Create: `backend/app/seed.py`
-- Create: `backend/Dockerfile`
-- Create: `backend/docker-compose.yml`
 - Test: `backend/tests/test_seed.py`
 
 **Interfaces:**
 - Consumes: `models.Equipment`, `SessionLocal`, `Base`, `engine` (Task 1, 2)
-- Produces: `seed(db: Session) -> int` — 시드 함수 (몇 개 넣었는지 반환, 이미 데이터 있으면 0), 미니서버에서 Tailscale Funnel로 공개된 API URL (`https://<기기이름>.<tailnet>.ts.net`)
+- Produces: `seed(db: Session) -> int` — 시드 함수 (몇 개 넣었는지 반환, 이미 데이터 있으면 0)
 
 - [ ] **Step 1: 실패하는 테스트 작성**
 
@@ -864,105 +892,30 @@ if __name__ == "__main__":
 Run: `pytest tests/ -v`
 Expected: PASS (전체)
 
-- [ ] **Step 5: Dockerfile 작성**
-
-```dockerfile
-# backend/Dockerfile
-FROM python:3.11-slim
-
-WORKDIR /app
-
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-
-COPY app ./app
-
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
-```
-
-- [ ] **Step 6: docker-compose.yml 작성 (API + Postgres)**
-
-```yaml
-# backend/docker-compose.yml
-version: "3.9"
-
-services:
-  db:
-    image: postgres:16
-    restart: unless-stopped
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: postgres
-    volumes:
-      - db_data:/var/lib/postgresql/data
-    ports:
-      - "127.0.0.1:5432:5432"
-
-  api:
-    build: .
-    restart: unless-stopped
-    environment:
-      DATABASE_URL: postgresql://postgres:postgres@db:5432/postgres
-    depends_on:
-      - db
-    ports:
-      - "8000:8000"
-
-volumes:
-  db_data:
-```
-
-`db` 포트는 `127.0.0.1`에만 바인딩해 로컬 디버깅 외 노출을 막는다. `api` 포트는 8000 전체 바인딩 — 이 포트만 Tailscale Funnel로 공개할 것이므로 괜찮다.
-
-- [ ] **Step 7: 커밋**
+- [ ] **Step 5: 로컬 시드 데이터 주입**
 
 ```bash
-git add backend/app/seed.py backend/Dockerfile backend/docker-compose.yml backend/tests/test_seed.py
-git commit -m "[추가] 시드 데이터 스크립트 + Docker 배포 설정"
+python -m app.seed
+```
+Expected: `6개 기자재를 추가했습니다.` (Task 1에서 띄워둔 `docker compose up db -d` Postgres에 그대로 들어감)
+
+- [ ] **Step 6: 커밋**
+
+```bash
+git add backend/app/seed.py backend/tests/test_seed.py
+git commit -m "[추가] 시드 데이터 스크립트"
 git push
 ```
 
-- [ ] **Step 8: 미니서버에서 컨테이너 실행**
+- [ ] **Step 7: Tailscale로 다른 기기에서 접근 확인**
 
-미니서버에 이 레포를 clone(또는 pull)한 뒤:
-
-```bash
-cd backend
-docker compose up -d --build
-```
-
-- [ ] **Step 9: 로컬(서버 안)에서 헬스체크 확인**
+이 컴퓨터에서 `uvicorn app.main:app --reload --port 8000`이 켜진 상태에서, `tailscale ip -4`로 본인 IP 확인 후 팀원 다른 기기(같은 tailnet)에서:
 
 ```bash
-curl http://localhost:8000/health
+curl http://<이 컴퓨터의 Tailscale IP>:8000/health
 ```
-Expected: `{"status":"ok"}`
+Expected: `{"status":"ok"}` — 이게 되면 프론트가 이 백엔드에 연결할 준비 끝. 협업가이드의 "개발 중 프론트-백엔드 통신" 섹션에 이 IP를 공유한다.
 
-- [ ] **Step 10: 컨테이너 안에서 시드 데이터 주입**
+- [ ] **Step 8: 시연 당일 체크리스트에 반영**
 
-```bash
-docker compose exec api python -m app.seed
-```
-Expected: `6개 기자재를 추가했습니다.`
-
-- [ ] **Step 11: Tailscale Funnel로 API 포트만 공개**
-
-```bash
-sudo tailscale funnel 8000 on
-tailscale funnel status
-```
-
-정확한 명령 문법은 설치된 Tailscale 버전에 따라 다를 수 있으니 `tailscale funnel --help`로 최종 확인한다. **5432(DB) 포트는 절대 funnel하지 않는다.**
-
-- [ ] **Step 12: 공개 확인**
-
-다른 네트워크(예: 휴대폰 데이터, Tailscale 미설치 기기)에서:
-```bash
-curl https://<기기이름>.<tailnet>.ts.net/health
-```
-Expected: `{"status":"ok"}` — Tailscale 없이도 접속되면 성공
-
-- [ ] **Step 13: 배포 URL을 레포 루트 README.md에 기록**
-
-`README.md`의 "링크" 섹션(또는 새 섹션)에 Funnel URL을 적어 프론트엔드 담당자가 `VITE_API_BASE`로 바로 쓸 수 있게 한다.
+이 로컬 서버(uvicorn + docker Postgres)가 시연 당일에도 그대로 켜져 있어야 한다. 시연 전 재부팅했다면 `docker compose up db -d` → `uvicorn app.main:app --reload --port 8000` 다시 실행. **백업:** Tailscale 연결이 현장에서 불안정할 경우를 대비해, 프론트와 백엔드를 한 노트북에서 같이 띄우는 방법도 알아둔다 (`VITE_API_BASE=http://localhost:8000`으로 바꾸기만 하면 됨).

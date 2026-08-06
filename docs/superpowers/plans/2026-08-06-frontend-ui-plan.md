@@ -4,13 +4,14 @@
 
 **Goal:** 학생이 학과별 기자재를 조회하고 대여를 신청하며, 조교가 신청을 승인·반려·반납 처리할 수 있는 화면을 만든다.
 
-**Architecture:** Vite + React SPA, react-router-dom으로 3개 화면(목록/신청폼/조교 대시보드) 라우팅. 백엔드는 별도 배포된 FastAPI REST API를 `fetch`로 호출한다. 인증 없음 — 조교 대시보드는 URL(`/admin`)만 비공개로 공유한다.
+**Architecture:** Vite + React SPA, react-router-dom으로 3개 화면(목록/신청폼/조교 대시보드) 라우팅. 백엔드는 팀원 로컬에서 돌아가는 FastAPI를 Tailscale로 직접 호출한다 — 프론트도 배포하지 않는다. 인증 없음 — 조교 대시보드는 URL(`/admin`)만 비공개로 공유한다.
 
-**Tech Stack:** React 18, Vite, react-router-dom v6, Vitest + @testing-library/react, Vercel(배포)
+**Tech Stack:** React 18, Vite, react-router-dom v6, Vitest + @testing-library/react. **배포 없음** — 로컬(`npm run dev` 또는 `npm run preview`)에서 Tailscale로 백엔드에 연결해 그대로 시연
 
 ## Global Constraints
 
-- 백엔드 API 베이스 URL은 환경변수 `VITE_API_BASE`로 주입한다 (로컬 기본값: `http://localhost:8000`)
+- 백엔드 API 베이스 URL은 환경변수 `VITE_API_BASE`로 주입한다 (로컬 기본값: `http://localhost:8000`, 팀원 컴퓨터의 백엔드에 붙일 땐 그 컴퓨터의 Tailscale IP)
+- **배포하지 않는다.** 심사위원 원격 접속이 필요 없어(제출물은 github + 현장 시연) Vercel 등 공개 호스팅이 불필요하다
 - API 계약은 `docs/superpowers/plans/2026-08-06-backend-api-plan.md`에 정의된 엔드포인트를 그대로 따른다: `GET /departments`, `GET /equipment?department=`, `POST /rentals`, `GET /rentals?status=`, `PATCH /rentals/{id}/approve|reject|return`
 - 인증 없음 — 백엔드와 동일한 MVP 범위
 - 모든 화면은 로딩 상태 / 빈 리스트 안내 / 에러 메시지를 반드시 포함한다 (제출 전 체크리스트의 "겉보기 완성도" 항목)
@@ -667,14 +668,14 @@ git push
 
 ---
 
-### Task 5: Vercel 배포
+### Task 5: 프로덕션 빌드로 시연 준비 (배포 없음)
 
 **Files:**
 - Create: `frontend/.env.example`
 
 **Interfaces:**
-- Consumes: 전체 App (Task 1~4), 백엔드 배포 URL (`2026-08-06-backend-api-plan.md` Task 5)
-- Produces: Vercel에 배포된 공개 URL
+- Consumes: 전체 App (Task 1~4), 백엔드의 Tailscale IP (`2026-08-06-backend-api-plan.md` Task 5)
+- Produces: 로컬에서 서빙되는 프로덕션 빌드 (`npm run preview`)
 
 - [ ] **Step 1: 빌드 확인**
 
@@ -682,31 +683,34 @@ git push
 cd frontend
 npm run build
 ```
-Expected: `dist/` 폴더 생성, 에러 없음
+Expected: `dist/` 폴더 생성, 에러 없음. 시연은 `npm run dev`보다 `npm run preview`(빌드된 정적 파일 서빙)가 더 안정적이라 이쪽을 권장한다.
 
 - [ ] **Step 2: .env.example 작성**
 
 ```
 # frontend/.env.example
-VITE_API_BASE=https://<기기이름>.<tailnet>.ts.net
+# 팀원 컴퓨터에서 로컬로 백엔드를 돌릴 때 그 컴퓨터의 Tailscale IP를 넣는다.
+VITE_API_BASE=http://<백엔드 담당자 Tailscale IP>:8000
 ```
 
-- [ ] **Step 3: Vercel 배포**
+`.env`는 `.gitignore`에 이미 포함되어 있어 커밋되지 않는다. 각자 자기 `.env`에 실제 IP를 넣어 쓴다.
+
+- [ ] **Step 3: 로컬 프로덕션 서버로 확인**
 
 ```bash
-npx vercel --cwd frontend
+npm run preview
 ```
 
-배포 중 환경변수 `VITE_API_BASE`를 Railway에 배포된 백엔드 URL로 설정한다 (Vercel 대시보드 또는 `vercel env add VITE_API_BASE`).
+접속해 학과 목록이 실제로 뜨는지 확인 — 로컬 프론트가 백엔드 담당자 컴퓨터의 API와 Tailscale로 통신하는지가 핵심 검증 지점.
 
-- [ ] **Step 4: 배포 확인**
-
-배포된 URL에 접속해 학과 목록이 실제로 뜨는지 확인 — 로컬이 아닌 배포된 프론트가 배포된 백엔드와 통신하는지가 핵심 검증 지점.
-
-- [ ] **Step 5: 커밋**
+- [ ] **Step 4: 커밋**
 
 ```bash
 git add frontend/.env.example
-git commit -m "[설정] Vercel 배포 설정 + 환경변수 예시"
+git commit -m "[설정] 환경변수 예시 (Tailscale 기반, 배포 없음)"
 git push
 ```
+
+- [ ] **Step 5: 시연 당일 체크리스트에 반영**
+
+시연 직전 `npm run build && npm run preview`로 새로 빌드해 최신 코드가 반영됐는지 확인한다. **백업:** Tailscale 연결이 불안정하면 프론트와 백엔드를 한 노트북에 합쳐 `VITE_API_BASE=http://localhost:8000`으로 전환할 수 있게 미리 확인해둔다.
