@@ -1,7 +1,9 @@
 # Node / React
 node_modules/
 dist/
+build/
 .vite/
+coverage/
 
 # Python / FastAPI
 __pycache__/

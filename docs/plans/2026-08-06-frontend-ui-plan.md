@@ -2,6 +2,8 @@
 
 > 이 문서는 TDD 방식 구현 계획입니다. Task 순서대로, 각 Step의 체크박스(`- [ ]`)를 따라 진행하세요.
 
+> ⚠️ **컴포넌트명·파일 경로는 최신이 아니다.** 이 문서는 `EquipmentList`/`RentalForm`/`AdminDashboard`(`src/pages/`, `src/api.js`) 기준으로 작성됐지만, 실제 보일러플레이트와 협업가이드는 `Home`/`EquipmentDetail`/`Rental`/`MyPage`/`AdminDashboard` 구조(`src/pages/`, `src/api/client.js` + `src/api/equipment.js`/`rentals.js`)를 쓴다. **테스트 시나리오·로딩/에러/빈 상태 처리 같은 로직은 그대로 유효**하니 참고하되, 파일명·함수 위치는 `frontend/` 보일러플레이트와 `협업가이드.md`를 따른다. 환경변수도 `VITE_API_BASE`가 아니라 `VITE_API_BASE_URL`이다.
+
 **Goal:** 학생이 학과별 기자재를 조회하고 대여를 신청하며, 조교가 신청을 승인·반려·반납 처리할 수 있는 화면을 만든다.
 
 **Architecture:** Vite + React SPA, react-router-dom으로 3개 화면(목록/신청폼/조교 대시보드) 라우팅. 백엔드는 팀원 로컬에서 돌아가는 FastAPI를 Tailscale로 직접 호출한다 — 프론트도 배포하지 않는다. 인증 없음 — 조교 대시보드는 URL(`/admin`)만 비공개로 공유한다.
@@ -10,12 +12,12 @@
 
 ## Global Constraints
 
-- 백엔드 API 베이스 URL은 환경변수 `VITE_API_BASE`로 주입한다 (로컬 기본값: `http://localhost:8000`, 팀원 컴퓨터의 백엔드에 붙일 땐 그 컴퓨터의 Tailscale IP)
+- 백엔드 API 베이스 URL은 환경변수 `VITE_API_BASE_URL`로 주입한다 (로컬 기본값: `http://localhost:8000`, 팀원 컴퓨터의 백엔드에 붙일 땐 그 컴퓨터의 Tailscale IP) — `frontend/src/api/client.js` 보일러플레이트가 이미 이 값을 읽는다
 - **배포하지 않는다.** 심사위원 원격 접속이 필요 없어(제출물은 github + 현장 시연) Vercel 등 공개 호스팅이 불필요하다
-- API 계약은 `docs/plans/2026-08-06-backend-api-plan.md`에 정의된 엔드포인트를 그대로 따른다: `GET /departments`, `GET /equipment?department=`, `POST /rentals`, `GET /rentals?status=`, `PATCH /rentals/{id}/approve|reject|return`
+- API 계약은 `docs/api/rest-api.md`에 정의된 엔드포인트를 그대로 따른다: `GET /departments`, `GET /equipment?department=`, `POST /rentals`, `GET /rentals?status=`, `PATCH /rentals/{id}/approve|reject|return`
 - 인증 없음 — 백엔드와 동일한 MVP 범위
 - 모든 화면은 로딩 상태 / 빈 리스트 안내 / 에러 메시지를 반드시 포함한다 (제출 전 체크리스트의 "겉보기 완성도" 항목)
-- 커밋 메시지는 레포 루트 `README.md`의 `[타입] 내용` 규칙을 따른다
+- 커밋 메시지는 `docs/development/convention.md`의 `feat:`/`fix:`/`test:`/`chore:` 규칙을 따른다
 - 이 레포의 `frontend/` 폴더만 다룬다. `backend/`는 건드리지 않는다
 
 ---
@@ -109,7 +111,7 @@ Expected: FAIL — `./api` 모듈이 없음
 
 ```js
 // frontend/src/api.js
-const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8000'
+const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
 
 export async function getDepartments() {
   const res = await fetch(`${API_BASE}/departments`)
@@ -173,7 +175,7 @@ Expected: PASS
 
 ```bash
 git add frontend/package.json frontend/package-lock.json frontend/vite.config.js frontend/src/setupTests.js frontend/src/api.js frontend/src/api.test.js
-git commit -m "[설정] Vite+React 프로젝트 셋업 + API 클라이언트"
+git commit -m "chore: Vite+React 프로젝트 셋업 + API 클라이언트"
 git push
 ```
 
@@ -342,7 +344,7 @@ Expected: PASS
 
 ```bash
 git add frontend/src/pages/EquipmentList.jsx frontend/src/pages/EquipmentList.test.jsx frontend/src/App.jsx
-git commit -m "[추가] 학과 선택 + 기자재 목록 화면"
+git commit -m "feat: 학과 선택 + 기자재 목록 화면"
 git push
 ```
 
@@ -498,7 +500,7 @@ Expected: PASS
 
 ```bash
 git add frontend/src/pages/RentalForm.jsx frontend/src/pages/RentalForm.test.jsx frontend/src/App.jsx
-git commit -m "[추가] 대여 신청 폼"
+git commit -m "feat: 대여 신청 폼"
 git push
 ```
 
@@ -662,7 +664,7 @@ Expected: PASS (전체)
 
 ```bash
 git add frontend/src/pages/AdminDashboard.jsx frontend/src/pages/AdminDashboard.test.jsx frontend/src/App.jsx
-git commit -m "[추가] 조교 대시보드 (승인/반려/반납)"
+git commit -m "feat: 조교 대시보드 (승인/반려/반납)"
 git push
 ```
 
@@ -690,7 +692,7 @@ Expected: `dist/` 폴더 생성, 에러 없음. 시연은 `npm run dev`보다 `n
 ```
 # frontend/.env.example
 # 팀원 컴퓨터에서 로컬로 백엔드를 돌릴 때 그 컴퓨터의 Tailscale IP를 넣는다.
-VITE_API_BASE=http://<백엔드 담당자 Tailscale IP>:8000
+VITE_API_BASE_URL=http://<백엔드 담당자 Tailscale IP>:8000
 ```
 
 `.env`는 `.gitignore`에 이미 포함되어 있어 커밋되지 않는다. 각자 자기 `.env`에 실제 IP를 넣어 쓴다.
@@ -707,10 +709,10 @@ npm run preview
 
 ```bash
 git add frontend/.env.example
-git commit -m "[설정] 환경변수 예시 (Tailscale 기반, 배포 없음)"
+git commit -m "chore: 환경변수 예시 (Tailscale 기반, 배포 없음)"
 git push
 ```
 
 - [ ] **Step 5: 시연 당일 체크리스트에 반영**
 
-시연 직전 `npm run build && npm run preview`로 새로 빌드해 최신 코드가 반영됐는지 확인한다. **백업:** Tailscale 연결이 불안정하면 프론트와 백엔드를 한 노트북에 합쳐 `VITE_API_BASE=http://localhost:8000`으로 전환할 수 있게 미리 확인해둔다.
+시연 직전 `npm run build && npm run preview`로 새로 빌드해 최신 코드가 반영됐는지 확인한다. **백업:** Tailscale 연결이 불안정하면 프론트와 백엔드를 한 노트북에 합쳐 `VITE_API_BASE_URL=http://localhost:8000`으로 전환할 수 있게 미리 확인해둔다.

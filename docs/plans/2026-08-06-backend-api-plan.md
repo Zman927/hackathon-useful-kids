@@ -4,121 +4,59 @@
 
 **Goal:** 공학관 기자재 대여를 위한 REST API를 만든다. 학생은 학과별 재고를 조회하고 대여를 신청하고, 조교는 신청을 승인·반려하고 반납을 처리한다.
 
-**Architecture:** FastAPI 단일 서비스 + PostgreSQL(로컬 Docker 컨테이너)/SQLite(테스트). SQLAlchemy ORM으로 `Equipment`, `Rental` 두 테이블을 관리한다. 인증 없음 — 조교 화면은 프론트엔드에서 비공개 URL로만 보호한다(MVP 범위). **별도 배포 없음** — 개발 중 쓰던 로컬 서버(uvicorn)를 Tailscale로 그대로 시연에 쓴다.
+**Architecture:** FastAPI 단일 서비스 + PostgreSQL(로컬 네이티브 설치, Docker 안 씀)/SQLite(테스트만 — 속도용). SQLAlchemy ORM으로 `Equipment`, `Rental` 두 테이블을 관리한다. 인증 없음 — 조교 화면은 프론트엔드에서 비공개 URL로만 보호한다(MVP 범위). **별도 배포 없음** — 개발 중 쓰던 로컬 서버(uvicorn)를 Tailscale로 그대로 시연에 쓴다.
 
-**Tech Stack:** Python 3.11+, FastAPI, SQLAlchemy 2.x, Pydantic v2, pytest + httpx(TestClient), Docker Compose(로컬 Postgres 실행용) + Tailscale(팀원·시연 간 네트워크 연결)
+**Tech Stack:** Python 3.11+, FastAPI, SQLAlchemy 2.x, Pydantic v2, pytest + httpx(TestClient), Tailscale(팀원·시연 간 네트워크 연결). Docker 미사용 — 보일러플레이트는 `backend/app/main.py`, `core/config.py`, `core/database.py`에 이미 있음 (`docs/development/setup.md` 참고)
 
 ## Global Constraints
 
 - DB 마이그레이션 도구 없음 — 앱 시작 시 `Base.metadata.create_all()`로 스키마 생성 (해커톤 속도 우선, Alembic 미사용)
-- **배포하지 않는다.** 심사위원이 원격으로 접속할 필요가 없어(제출물은 github + 현장 시연) 미니서버·퍼블릭 URL·Docker 이미지 빌드가 전부 불필요. 개발 중 쓰던 로컬 백엔드(uvicorn --reload)를 시연 당일에도 그대로 켜두고 Tailscale로 프론트와 연결한다
+- **Docker를 쓰지 않는다.** PostgreSQL은 각자 컴퓨터에 네이티브로 설치한다 (`docs/development/setup.md` 참고)
+- **배포하지 않는다.** 심사위원이 원격으로 접속할 필요가 없어(제출물은 github + 현장 시연) 미니서버·퍼블릭 URL이 전부 불필요. 개발 중 쓰던 로컬 백엔드(uvicorn --reload)를 시연 당일에도 그대로 켜두고 Tailscale로 프론트와 연결한다
 - 인증 없음 — 모든 엔드포인트는 공개. 조교 보호는 프론트엔드 URL 비공개로만 처리
 - CORS: 모든 origin 허용 (해커톤 기간 한정 완화 설정)
-- 테스트 DB: SQLite in-memory (`StaticPool`) — Postgres와 별도 설치 없이 빠르게 실행
+- 테스트 DB: SQLite in-memory (`StaticPool`) — 실제 DB(Postgres) 없이도 테스트가 빠르게 실행됨
+- 라우터는 `backend/app/api/` 아래에 둔다 (`routers/`가 아님). 검증만 하고, 비즈니스 로직은 `backend/app/services/`에 둔다
 - 상태값(`RentalStatus`)은 한글 문자열로 저장한다: `신청됨` / `대여중` / `반려됨` / `반납완료`
-- 커밋 메시지는 레포 루트 `README.md`의 `[타입] 내용` 규칙을 따른다 (예: `[추가] 기자재 조회 API`)
+- 커밋 메시지는 `docs/development/convention.md`의 `feat:`/`fix:`/`test:`/`chore:` 규칙을 따른다
 - 이 레포의 `backend/` 폴더만 다룬다. `frontend/`는 건드리지 않는다 (별도 계획: `2026-08-06-frontend-ui-plan.md`)
 
 ---
 
-### Task 1: 프로젝트 셋업 + DB 연결 + 헬스체크
+### Task 1: 보일러플레이트 확인 + DB 연결 + 헬스체크 테스트
+
+**보일러플레이트는 이미 레포에 있다.** `backend/requirements.txt`, `backend/.env.example`, `backend/app/main.py`, `backend/app/core/config.py`, `backend/app/core/database.py`가 전부 준비돼 있으므로 이 태스크는 새로 만드는 게 아니라 **연결을 확인하고 테스트 인프라를 얹는 것**이다.
 
 **Files:**
-- Create: `backend/requirements.txt`
-- Create: `backend/docker-compose.yml` (Postgres 로컬 실행용 — 배포 아님)
-- Create: `backend/app/__init__.py`
-- Create: `backend/app/database.py`
-- Create: `backend/app/main.py`
 - Create: `backend/tests/__init__.py`
 - Create: `backend/tests/conftest.py`
 - Test: `backend/tests/test_health.py`
 
 **Interfaces:**
-- Consumes: 없음 (최초 태스크)
+- Consumes: `get_db()`, `Base`(`app/core/database.py`), `app`(`app/main.py`) — 이미 존재
 - Produces:
-  - `get_db()` — FastAPI dependency, `database.py`
-  - `Base` — SQLAlchemy declarative base, `database.py`
-  - `app` — FastAPI 인스턴스, `main.py`
   - `db_session` fixture — 테스트용 raw SQLAlchemy 세션, `tests/conftest.py`
   - `client` fixture — 테스트용 `TestClient` (FastAPI 앱에 `db_session`을 주입), `tests/conftest.py`
 
-- [ ] **Step 1: 프로젝트 구조와 requirements.txt 작성**
+- [ ] **Step 1: PostgreSQL 연결 확인**
 
-`backend/requirements.txt`:
-```
-fastapi
-uvicorn[standard]
-sqlalchemy
-psycopg2-binary
-pydantic
-pytest
-httpx
-```
+`docs/development/setup.md`대로 PostgreSQL을 네이티브 설치하고 `.env`를 채운 뒤:
 
 ```bash
 cd backend
 python -m venv .venv
 .venv\Scripts\Activate.ps1
 pip install -r requirements.txt
+copy .env.example .env
+# .env를 실제 Postgres 접속 정보로 수정
+uvicorn app.main:app --reload --port 8000
 ```
 
-`backend/app/__init__.py`: 빈 파일로 생성.
+`http://localhost:8000/health`에서 `{"status": "ok"}`가 뜨면 DB 연결·앱 실행 확인 완료.
 
-`backend/docker-compose.yml` (Postgres만 — API는 로컬에서 `uvicorn --reload`로 직접 실행하므로 컨테이너화하지 않는다):
+- [ ] **Step 2: conftest.py 작성 (테스트 DB 픽스처)**
 
-```yaml
-# backend/docker-compose.yml
-version: "3.9"
-
-services:
-  db:
-    image: postgres:16
-    restart: unless-stopped
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: postgres
-    volumes:
-      - db_data:/var/lib/postgresql/data
-    ports:
-      - "127.0.0.1:5432:5432"
-
-volumes:
-  db_data:
-```
-
-```bash
-docker compose up db -d
-```
-
-이 컨테이너를 각자 로컬에서 띄워 개발한다. `database.py`의 기본 `DATABASE_URL`이 이 설정과 그대로 맞아떨어진다.
-
-- [ ] **Step 2: database.py 작성**
-
-```python
-# backend/app/database.py
-import os
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, declarative_base
-
-DATABASE_URL = os.environ.get(
-    "DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/postgres"
-)
-
-engine = create_engine(DATABASE_URL)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-Base = declarative_base()
-
-
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-```
-
-- [ ] **Step 3: conftest.py 작성 (테스트 DB 픽스처)**
+테스트는 실제 Postgres가 없어도 돌아가도록 SQLite in-memory를 쓴다.
 
 ```python
 # backend/tests/conftest.py
@@ -128,7 +66,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 from fastapi.testclient import TestClient
 
-from app.database import Base, get_db
+from app.core.database import Base, get_db
 from app.main import app
 
 
@@ -161,7 +99,7 @@ def client(db_session):
 
 `backend/tests/__init__.py`: 빈 파일로 생성.
 
-- [ ] **Step 4: 실패하는 헬스체크 테스트 작성**
+- [ ] **Step 3: 헬스체크 테스트 작성**
 
 ```python
 # backend/tests/test_health.py
@@ -171,47 +109,16 @@ def test_health_check(client):
     assert response.json() == {"status": "ok"}
 ```
 
-- [ ] **Step 5: 테스트 실행 → 실패 확인**
-
-Run: `pytest backend/tests/test_health.py -v` (backend 폴더 기준이면 `pytest tests/test_health.py -v`)
-Expected: FAIL — `app.main` 모듈이 없어서 import 에러
-
-- [ ] **Step 6: main.py 작성 (헬스체크 엔드포인트 포함)**
-
-```python
-# backend/app/main.py
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-
-from .database import Base, engine
-
-Base.metadata.create_all(bind=engine)
-
-app = FastAPI(title="기자재 대여 플랫폼 API")
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-
-@app.get("/health")
-def health():
-    return {"status": "ok"}
-```
-
-- [ ] **Step 7: 테스트 실행 → 통과 확인**
+- [ ] **Step 4: 테스트 실행 → 통과 확인**
 
 Run: `pytest tests/test_health.py -v`
-Expected: PASS
+Expected: PASS (헬스체크는 이미 `main.py`에 구현돼 있으므로 바로 통과해야 정상)
 
-- [ ] **Step 8: 커밋**
+- [ ] **Step 5: 커밋**
 
 ```bash
-git add backend/requirements.txt backend/docker-compose.yml backend/app backend/tests
-git commit -m "[설정] FastAPI 프로젝트 셋업 + 헬스체크"
+git add backend/tests
+git commit -m "test: 헬스체크 테스트 및 conftest 픽스처 추가"
 git push
 ```
 
@@ -220,10 +127,14 @@ git push
 ### Task 2: Equipment 모델 + 조회 API
 
 **Files:**
-- Create: `backend/app/models.py`
-- Create: `backend/app/schemas.py`
-- Create: `backend/app/routers/__init__.py`
-- Create: `backend/app/routers/equipment.py`
+- Create: `backend/app/models/rental_status.py`
+- Create: `backend/app/models/equipment.py`
+- Create: `backend/app/models/rental.py`
+- Modify: `backend/app/models/__init__.py` (재수출 — 이미 빈 패키지로 존재)
+- Create: `backend/app/schemas/equipment.py`
+- Create: `backend/app/schemas/rental.py`
+- Modify: `backend/app/schemas/__init__.py` (재수출 — 이미 빈 패키지로 존재)
+- Create: `backend/app/api/equipment.py`
 - Modify: `backend/app/main.py`
 - Test: `backend/tests/test_equipment.py`
 
@@ -237,16 +148,13 @@ git push
   - `GET /departments` → `list[str]`
   - `GET /equipment?department=` → `list[EquipmentOut]`
 
-- [ ] **Step 1: models.py 작성 (Equipment + RentalStatus)**
+- [ ] **Step 1: models/ 패키지 작성 (Equipment + Rental + RentalStatus)**
+
+`backend/app/models/__init__.py`는 이미 빈 패키지로 있다 (보일러플레이트). 아래 세 파일을 추가하고 `__init__.py`에 재수출을 채운다.
 
 ```python
-# backend/app/models.py
+# backend/app/models/rental_status.py
 import enum
-from sqlalchemy import Column, Integer, String, ForeignKey, DateTime
-from sqlalchemy.orm import relationship
-from sqlalchemy.sql import func
-
-from .database import Base
 
 
 class RentalStatus(str, enum.Enum):
@@ -254,6 +162,13 @@ class RentalStatus(str, enum.Enum):
     APPROVED = "대여중"
     REJECTED = "반려됨"
     RETURNED = "반납완료"
+```
+
+```python
+# backend/app/models/equipment.py
+from sqlalchemy import Column, Integer, String
+
+from ..core.database import Base
 
 
 class Equipment(Base):
@@ -265,6 +180,16 @@ class Equipment(Base):
     total_quantity = Column(Integer, nullable=False)
     available_quantity = Column(Integer, nullable=False)
     description = Column(String, nullable=True)
+```
+
+```python
+# backend/app/models/rental.py
+from sqlalchemy import Column, Integer, String, ForeignKey, DateTime
+from sqlalchemy.orm import relationship
+from sqlalchemy.sql import func
+
+from ..core.database import Base
+from .rental_status import RentalStatus
 
 
 class Rental(Base):
@@ -283,16 +208,24 @@ class Rental(Base):
     equipment = relationship("Equipment")
 ```
 
-`Rental`은 Task 3에서 실제로 쓰이지만, 테이블을 한 파일에서 같이 정의해야 `Base.metadata.create_all()`이 두 테이블을 한 번에 만든다. Task 3에서 이 파일을 다시 열지 않는다.
+```python
+# backend/app/models/__init__.py
+from .rental_status import RentalStatus
+from .equipment import Equipment
+from .rental import Rental
+```
 
-- [ ] **Step 2: schemas.py 작성**
+`from app import models`로 불러오면 기존처럼 `models.Equipment`, `models.Rental`, `models.RentalStatus`로 그대로 쓸 수 있다 — 아래 테스트 코드가 그 형태를 그대로 쓴다.
+
+`Rental`은 Task 3에서 실제로 API에 쓰이지만, 테이블을 여기서 같이 정의해야 `Base.metadata.create_all()`이 두 테이블을 한 번에 만든다. Task 3에서 이 파일들을 다시 열지 않는다.
+
+- [ ] **Step 2: schemas/ 패키지 작성**
+
+`backend/app/schemas/__init__.py`도 이미 빈 패키지로 있다.
 
 ```python
-# backend/app/schemas.py
-from datetime import datetime
+# backend/app/schemas/equipment.py
 from pydantic import BaseModel, ConfigDict
-
-from .models import RentalStatus
 
 
 class EquipmentOut(BaseModel):
@@ -304,6 +237,14 @@ class EquipmentOut(BaseModel):
     total_quantity: int
     available_quantity: int
     description: str | None = None
+```
+
+```python
+# backend/app/schemas/rental.py
+from datetime import datetime
+from pydantic import BaseModel, ConfigDict
+
+from ..models import RentalStatus
 
 
 class RentalCreate(BaseModel):
@@ -328,7 +269,15 @@ class RentalOut(BaseModel):
     processed_at: datetime | None = None
 ```
 
-`RentalCreate`/`RentalOut`은 Task 3에서 쓰이지만, 이 파일도 한 번만 작성해 이후 태스크에서 이어 쓴다.
+```python
+# backend/app/schemas/__init__.py
+from .equipment import EquipmentOut
+from .rental import RentalCreate, RentalOut
+```
+
+`from app import schemas`로 불러오면 `schemas.EquipmentOut`, `schemas.RentalCreate`, `schemas.RentalOut`으로 그대로 쓸 수 있다.
+
+`RentalCreate`/`RentalOut`은 Task 3에서 쓰이지만, 이 파일들도 한 번만 작성해 이후 태스크에서 이어 쓴다.
 
 - [ ] **Step 3: 실패하는 조회 테스트 작성**
 
@@ -391,17 +340,17 @@ def test_list_equipment_without_filter_returns_all(client, db_session):
 Run: `pytest tests/test_equipment.py -v`
 Expected: FAIL — `/departments`, `/equipment` 라우트가 없어 404
 
-- [ ] **Step 5: routers/equipment.py 작성 + main.py에 등록**
+- [ ] **Step 5: api/equipment.py 작성 + main.py에 등록**
 
-`backend/app/routers/__init__.py`: 빈 파일로 생성.
+`backend/app/api/__init__.py`: 빈 파일로 생성.
 
 ```python
-# backend/app/routers/equipment.py
+# backend/app/api/equipment.py
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from .. import models, schemas
-from ..database import get_db
+from ..core.database import get_db
 
 router = APIRouter()
 
@@ -423,7 +372,7 @@ def list_equipment(department: str | None = None, db: Session = Depends(get_db))
 `backend/app/main.py`에 추가 (기존 `@app.get("/health")` 아래):
 
 ```python
-from .routers import equipment
+from .api import equipment
 
 app.include_router(equipment.router)
 ```
@@ -437,7 +386,7 @@ Expected: PASS (5개 테스트 전부)
 
 ```bash
 git add backend/app backend/tests
-git commit -m "[추가] 기자재 조회 API (학과 목록, 학과별 재고)"
+git commit -m "feat: 기자재 조회 API (학과 목록, 학과별 재고)"
 git push
 ```
 
@@ -446,7 +395,7 @@ git push
 ### Task 3: Rental 신청 생성 API
 
 **Files:**
-- Create: `backend/app/routers/rentals.py`
+- Create: `backend/app/api/rentals.py`
 - Modify: `backend/app/main.py`
 - Test: `backend/tests/test_rentals_create.py`
 
@@ -517,15 +466,15 @@ def test_create_rental_fails_for_unknown_equipment(client, db_session):
 Run: `pytest tests/test_rentals_create.py -v`
 Expected: FAIL — `/rentals` 라우트 없음 (404 대신 405 혹은 존재하지 않음)
 
-- [ ] **Step 3: routers/rentals.py 작성 (POST만) + main.py 등록**
+- [ ] **Step 3: api/rentals.py 작성 (POST만) + main.py 등록**
 
 ```python
-# backend/app/routers/rentals.py
+# backend/app/api/rentals.py
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from .. import models, schemas
-from ..database import get_db
+from ..core.database import get_db
 
 router = APIRouter()
 
@@ -553,7 +502,7 @@ def create_rental(rental: schemas.RentalCreate, db: Session = Depends(get_db)):
 `backend/app/main.py`에 추가:
 
 ```python
-from .routers import rentals
+from .api import rentals
 
 app.include_router(rentals.router)
 ```
@@ -567,7 +516,7 @@ Expected: PASS
 
 ```bash
 git add backend/app backend/tests
-git commit -m "[추가] 대여 신청 생성 API"
+git commit -m "feat: 대여 신청 생성 API"
 git push
 ```
 
@@ -576,7 +525,7 @@ git push
 ### Task 4: Rental 목록 + 승인/반려/반납 API
 
 **Files:**
-- Modify: `backend/app/routers/rentals.py`
+- Modify: `backend/app/api/rentals.py`
 - Test: `backend/tests/test_rentals_manage.py`
 
 **Interfaces:**
@@ -701,16 +650,16 @@ Expected: FAIL — `GET /rentals`, `PATCH .../approve|reject|return` 없음
 
 - [ ] **Step 3: rentals.py에 나머지 엔드포인트 추가**
 
-`backend/app/routers/rentals.py` 전체 내용 (Task 3의 `create_rental` 아래에 추가):
+`backend/app/api/rentals.py` 전체 내용 (Task 3의 `create_rental` 아래에 추가):
 
 ```python
-# backend/app/routers/rentals.py
+# backend/app/api/rentals.py
 from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from .. import models, schemas
-from ..database import get_db
+from ..core.database import get_db
 
 router = APIRouter()
 
@@ -803,8 +752,8 @@ Expected: PASS (전체)
 - [ ] **Step 5: 커밋**
 
 ```bash
-git add backend/app/routers/rentals.py backend/tests/test_rentals_manage.py
-git commit -m "[추가] 대여 신청 목록/승인/반려/반납 API"
+git add backend/app/api/rentals.py backend/tests/test_rentals_manage.py
+git commit -m "feat: 대여 신청 목록/승인/반려/반납 API"
 git push
 ```
 
@@ -855,7 +804,7 @@ Expected: FAIL — `app.seed` 모듈 없음
 # backend/app/seed.py
 from sqlalchemy.orm import Session
 
-from .database import Base, SessionLocal, engine
+from .core.database import Base, SessionLocal, engine
 from . import models
 
 SEED_EQUIPMENT = [
@@ -897,13 +846,13 @@ Expected: PASS (전체)
 ```bash
 python -m app.seed
 ```
-Expected: `6개 기자재를 추가했습니다.` (Task 1에서 띄워둔 `docker compose up db -d` Postgres에 그대로 들어감)
+Expected: `6개 기자재를 추가했습니다.` (`.env`에 연결된 로컬 PostgreSQL에 그대로 들어감)
 
 - [ ] **Step 6: 커밋**
 
 ```bash
 git add backend/app/seed.py backend/tests/test_seed.py
-git commit -m "[추가] 시드 데이터 스크립트"
+git commit -m "feat: 시드 데이터 스크립트"
 git push
 ```
 
@@ -918,4 +867,4 @@ Expected: `{"status":"ok"}` — 이게 되면 프론트가 이 백엔드에 연�
 
 - [ ] **Step 8: 시연 당일 체크리스트에 반영**
 
-이 로컬 서버(uvicorn + docker Postgres)가 시연 당일에도 그대로 켜져 있어야 한다. 시연 전 재부팅했다면 `docker compose up db -d` → `uvicorn app.main:app --reload --port 8000` 다시 실행. **백업:** Tailscale 연결이 현장에서 불안정할 경우를 대비해, 프론트와 백엔드를 한 노트북에서 같이 띄우는 방법도 알아둔다 (`VITE_API_BASE=http://localhost:8000`으로 바꾸기만 하면 됨).
+이 로컬 서버(uvicorn + PostgreSQL)가 시연 당일에도 그대로 켜져 있어야 한다. 시연 전 재부팅했다면 PostgreSQL 서비스가 자동 기동됐는지 확인 후 `uvicorn app.main:app --reload --port 8000` 다시 실행. **백업:** Tailscale 연결이 현장에서 불안정할 경우를 대비해, 프론트와 백엔드를 한 노트북에서 같이 띄우는 방법도 알아둔다 (`VITE_API_BASE_URL=http://localhost:8000`으로 바꾸기만 하면 됨).
