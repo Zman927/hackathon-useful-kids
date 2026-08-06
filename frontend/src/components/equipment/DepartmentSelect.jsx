@@ -11,15 +11,12 @@ const COLLEGE_NAME = "공과대학";
 
 function DepartmentSelect() {
   const { selectedDepartmentId, setSelectedDepartmentId } = useApp();
-  const selectedName = DEPARTMENTS.find(
-    (department) => department.id === selectedDepartmentId,
-  )?.name;
 
   return (
     <div className="dropdown-group relative">
       <button className="flex items-center gap-2 py-5 font-medium text-gray-700 hover:text-home-primary">
         <i className="fa-solid fa-graduation-cap" />
-        {selectedName ?? "학과 선택"}
+        학과 / 학부
       </button>
       <div className="dropdown-menu absolute top-full left-1/2 z-50 hidden w-[420px] -translate-x-1/2 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-xl">
         <div className="flex">

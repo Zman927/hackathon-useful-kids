@@ -17,6 +17,7 @@ function Home() {
   const [equipmentList, setEquipmentList] = useState([]);
   const [error, setError] = useState("");
   const [dueSoonRental, setDueSoonRental] = useState(null);
+  const [searchText, setSearchText] = useState("");
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -51,6 +52,9 @@ function Home() {
     (department) => department.id === selectedDepartmentId,
   )?.name;
   const trendingEquipment = equipmentList.slice(0, 3);
+  const filteredEquipmentList = equipmentList.filter((equipment) =>
+    equipment.name.toLowerCase().includes(searchText.trim().toLowerCase()),
+  );
 
   return (
     <div className="bg-[#f4f5f7] text-gray-800 antialiased">
@@ -71,6 +75,8 @@ function Home() {
             <input
               type="text"
               placeholder="기자재 이름으로 검색..."
+              value={searchText}
+              onChange={(event) => setSearchText(event.target.value)}
               className="w-full border-none bg-transparent py-3 text-lg text-gray-700 focus:ring-0 focus:outline-none"
             />
           </div>
@@ -152,9 +158,16 @@ function Home() {
           <EmptyState message="대여 가능한 기자재가 없습니다." />
         )}
 
-        {selectedDepartmentId && !error && equipmentList.length > 0 && (
+        {selectedDepartmentId &&
+          !error &&
+          equipmentList.length > 0 &&
+          filteredEquipmentList.length === 0 && (
+            <EmptyState message="검색 결과가 없습니다." />
+          )}
+
+        {selectedDepartmentId && !error && filteredEquipmentList.length > 0 && (
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {equipmentList.map((equipment) => (
+            {filteredEquipmentList.map((equipment) => (
               <EquipmentCard
                 key={equipment.id}
                 equipment={equipment}

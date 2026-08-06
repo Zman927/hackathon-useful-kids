@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { getMyRentals } from "../api/rentalApi";
 import RentalHistoryItem from "../components/rental/RentalHistoryItem";
@@ -13,10 +14,16 @@ const FILTERS = [
 ];
 
 function MyPage() {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const [rentals, setRentals] = useState([]);
   const [error, setError] = useState("");
   const [activeFilter, setActiveFilter] = useState("all");
+  const navigate = useNavigate();
+
+  function handleLogout() {
+    logout();
+    navigate("/");
+  }
 
   useEffect(() => {
     if (!user) {
@@ -50,19 +57,28 @@ function MyPage() {
       <AppHeader />
 
       <main className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
-        <section className="mb-8 flex items-center gap-6 rounded-lg border border-gray-200 bg-white p-8 shadow-sm">
-          <div className="flex h-16 w-16 items-center justify-center rounded-lg bg-home-secondary">
-            <i className="fa-solid fa-user text-2xl text-home-primary" />
+        <section className="mb-8 flex items-center justify-between gap-6 rounded-lg border border-gray-200 bg-white p-8 shadow-sm">
+          <div className="flex items-center gap-6">
+            <div className="flex h-16 w-16 items-center justify-center rounded-lg bg-home-secondary">
+              <i className="fa-solid fa-user text-2xl text-home-primary" />
+            </div>
+            <div>
+              <h1 className="mb-1 text-2xl font-bold text-gray-900">
+                {user.userName}
+              </h1>
+              <p className="flex items-center gap-2 text-gray-500">
+                <i className="fa-solid fa-id-badge" />
+                Student ID: {user.userId}
+              </p>
+            </div>
           </div>
-          <div>
-            <h1 className="mb-1 text-2xl font-bold text-gray-900">
-              {user.userName}
-            </h1>
-            <p className="flex items-center gap-2 text-gray-500">
-              <i className="fa-solid fa-id-badge" />
-              Student ID: {user.userId}
-            </p>
-          </div>
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50"
+          >
+            <i className="fa-solid fa-right-from-bracket" />
+            로그아웃
+          </button>
         </section>
 
         {error && <EmptyState message={error} />}
