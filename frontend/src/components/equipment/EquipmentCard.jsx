@@ -26,7 +26,9 @@ function EquipmentCard({ equipment, onClick }) {
         <h3 className="mb-1 text-lg font-bold text-gray-900">
           {equipment.name}
         </h3>
-        <p className="text-xs text-gray-500">{equipment.category}</p>
+        {equipment.category && (
+          <p className="text-xs text-gray-500">{equipment.category}</p>
+        )}
         {equipment.departmentName && (
           <p className="mt-1 mb-4 text-xs font-semibold text-blue-600 flex items-center gap-1">
             <i className="fa-solid fa-graduation-cap text-[10px]" />

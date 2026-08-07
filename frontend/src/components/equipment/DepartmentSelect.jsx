@@ -1,23 +1,27 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useApp } from "../../context/AppContext";
 import { request } from "../../api/apiClient";
 
-export const DEPARTMENTS = [];
 export const COLLEGES = [];
+export const DEPARTMENTS = [];
 
 let loadPromise = null;
 
-function loadDepartments() {
+export function loadDepartments() {
   if (!loadPromise) {
     loadPromise = request("/departments")
       .then((data) => {
         COLLEGES.length = 0;
         DEPARTMENTS.length = 0;
-        data.forEach(({ college, departments }) => {
-          COLLEGES.push({ college, departments });
-          departments.forEach((dept) => DEPARTMENTS.push(dept));
-        });
-        return data;
+
+        if (Array.isArray(data)) {
+          data.forEach(({ college, departments }) => {
+            COLLEGES.push({ college, departments });
+            departments.forEach((d) => DEPARTMENTS.push(d));
+          });
+        }
+        return COLLEGES;
       })
       .catch((err) => {
         loadPromise = null;
@@ -27,18 +31,32 @@ function loadDepartments() {
   return loadPromise;
 }
 
-loadDepartments().catch(() => {});
+export function getDepartmentName(departmentId) {
+  const found = DEPARTMENTS.find((d) => d.id === Number(departmentId));
+  return found ? found.name : "";
+}
+
+export function findDepartmentIdByName(name) {
+  const found = DEPARTMENTS.find((d) => d.name === name);
+  return found ? found.id : null;
+}
 
 function DepartmentSelect() {
   const { selectedDepartmentId, setSelectedDepartmentId } = useApp();
   const [colleges, setColleges] = useState(COLLEGES);
-  const [activeCollege, setActiveCollege] = useState(COLLEGES[0]?.college ?? null);
+  const [activeCollege, setActiveCollege] = useState(COLLEGES[0]?.college ?? "");
+  const navigate = useNavigate();
+
+  function handleSelectDepartment(deptId) {
+    setSelectedDepartmentId(deptId);
+    navigate("/");
+  }
 
   useEffect(() => {
     loadDepartments()
-      .then(() => {
-        setColleges([...COLLEGES]);
-        setActiveCollege((current) => current ?? COLLEGES[0]?.college ?? null);
+      .then((updated) => {
+        setColleges([...updated]);
+        setActiveCollege((current) => current || updated[0]?.college || "");
       })
       .catch(() => {});
   }, []);
@@ -55,9 +73,9 @@ function DepartmentSelect() {
       <div className="dropdown-menu absolute top-full left-1/2 z-50 hidden max-h-[420px] w-[480px] -translate-x-1/2 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-xl">
         <div className="flex">
           <div className="max-h-[420px] w-40 shrink-0 overflow-y-auto border-r border-gray-100 bg-gray-50 py-2">
-            {colleges.map(({ college }) => (
+            {colleges.map(({ college }, index) => (
               <button
-                key={college}
+                key={`${college}-${index}`}
                 onClick={() => setActiveCollege(college)}
                 className={`block w-full border-l-4 px-4 py-3 text-left text-sm font-bold transition-colors ${
                   college === activeCollege
@@ -74,7 +92,7 @@ function DepartmentSelect() {
               {activeDepartments.map((department) => (
                 <button
                   key={department.id}
-                  onClick={() => setSelectedDepartmentId(department.id)}
+                  onClick={() => handleSelectDepartment(department.id)}
                   className={`rounded px-2 py-1 text-left text-sm transition-colors ${
                     department.id === selectedDepartmentId
                       ? "bg-home-secondary font-bold text-home-primary"

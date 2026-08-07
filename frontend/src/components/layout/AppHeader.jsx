@@ -1,9 +1,15 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import DepartmentSelect from "../equipment/DepartmentSelect";
 
 function AppHeader() {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+
+  function handleLogout() {
+    logout();
+    navigate("/");
+  }
 
   return (
     <header className="sticky top-0 z-50 border-b border-gray-200 bg-white">
@@ -24,12 +30,21 @@ function AppHeader() {
             </Link>
             <DepartmentSelect />
             {user ? (
-              <Link
-                to="/mypage"
-                className="flex items-center gap-2 font-medium text-gray-700 hover:text-home-primary"
-              >
-                <i className="fa-regular fa-circle-user text-xl" /> 마이페이지
-              </Link>
+              <>
+                <Link
+                  to="/mypage"
+                  className="flex items-center gap-2 font-medium text-gray-700 hover:text-home-primary"
+                >
+                  <i className="fa-regular fa-circle-user text-xl" /> 마이페이지
+                </Link>
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="flex items-center gap-2 font-medium text-gray-700 hover:text-red-600 transition-colors cursor-pointer"
+                >
+                  <i className="fa-solid fa-right-from-bracket text-lg" /> 로그아웃
+                </button>
+              </>
             ) : (
               <Link
                 to="/login"

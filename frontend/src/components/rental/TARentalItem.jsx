@@ -17,7 +17,7 @@ function getAvatarInitials(name) {
   return name.slice(0, 2).toUpperCase();
 }
 
-function TARentalItem({ rental, onApprove, onReject }) {
+function TARentalItem({ rental, onApprove, onReject, onReturn }) {
   return (
     <div className="grid grid-cols-12 items-center gap-3 border-b border-gray-100 p-4 transition-colors hover:bg-gray-50/50 last:border-0">
       {/* STUDENT */}
@@ -104,6 +104,14 @@ function TARentalItem({ rental, onApprove, onReject }) {
               Approve
             </button>
           </>
+        ) : rental.status === "rented" ? (
+          <button
+            type="button"
+            onClick={() => onReturn(rental.id)}
+            className="rounded-lg border border-emerald-300 bg-white px-2.5 py-1.5 text-xs font-bold text-emerald-700 transition-colors hover:bg-emerald-50 cursor-pointer shadow-sm"
+          >
+            반납 처리
+          </button>
         ) : (
           <span className="text-xs text-gray-400 font-medium">처리 완료</span>
         )}

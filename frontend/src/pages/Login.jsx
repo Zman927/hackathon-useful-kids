@@ -100,15 +100,6 @@ function Login() {
           {error && (
             <p className="text-label-sm font-label-sm text-error">{error}</p>
           )}
-          <div className="mt-4 rounded-lg bg-blue-50/60 p-3 border border-blue-100 text-center">
-            <p className="text-xs text-gray-600">
-              💡 <span className="font-semibold">조교 계정 테스트</span>: 아이디에{" "}
-              <code className="rounded bg-white px-1.5 py-0.5 text-xs font-bold text-blue-700 border border-blue-200">
-                admin
-              </code>{" "}
-              입력 후 로그인
-            </p>
-          </div>
         </form>
       </div>
     </main>

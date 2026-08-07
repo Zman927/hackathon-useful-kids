@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { addEquipment } from "../../api/equipmentApi";
-import { DEPARTMENTS } from "./DepartmentSelect";
+import { DEPARTMENTS, loadDepartments } from "./DepartmentSelect";
 
 const CATEGORIES = [
   "카메라/영상",
@@ -14,8 +14,9 @@ const CATEGORIES = [
 
 function AddEquipmentModal({ onClose, onSuccess, initialDepartmentId }) {
   const [name, setName] = useState("");
+  const [departments, setDepartments] = useState(DEPARTMENTS);
   const [departmentId, setDepartmentId] = useState(
-    initialDepartmentId ? String(initialDepartmentId) : "1",
+    initialDepartmentId ? String(initialDepartmentId) : "",
   );
   const [category, setCategory] = useState(CATEGORIES[0]);
   const [totalQuantity, setTotalQuantity] = useState(1);
@@ -24,6 +25,15 @@ function AddEquipmentModal({ onClose, onSuccess, initialDepartmentId }) {
   const [description, setDescription] = useState("");
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    loadDepartments()
+      .then(() => {
+        setDepartments([...DEPARTMENTS]);
+        setDepartmentId((current) => current || String(DEPARTMENTS[0]?.id ?? ""));
+      })
+      .catch(() => {});
+  }, []);
 
   function handleImageChange(event) {
     const file = event.target.files?.[0] ?? null;
@@ -35,6 +45,10 @@ function AddEquipmentModal({ onClose, onSuccess, initialDepartmentId }) {
     event.preventDefault();
     if (!name.trim()) {
       setError("기자재 이름을 입력해 주세요.");
+      return;
+    }
+    if (!departmentId) {
+      setError("학과 목록을 아직 불러오는 중입니다. 잠시 후 다시 시도해 주세요.");
       return;
     }
     setError("");
@@ -109,7 +123,10 @@ function AddEquipmentModal({ onClose, onSuccess, initialDepartmentId }) {
                 onChange={(e) => setDepartmentId(e.target.value)}
                 className="w-full rounded-lg border border-gray-300 px-3.5 py-2.5 text-sm text-gray-800 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
               >
-                {DEPARTMENTS.map((dept) => (
+                {departments.length === 0 && (
+                  <option value="">학과 불러오는 중...</option>
+                )}
+                {departments.map((dept) => (
                   <option key={dept.id} value={dept.id}>
                     {dept.name}
                   </option>

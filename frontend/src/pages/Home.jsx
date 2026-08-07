@@ -5,7 +5,11 @@ import { useAuth } from "../context/AuthContext";
 import { getEquipmentList } from "../api/equipmentApi";
 import { getMyRentals } from "../api/rentalApi";
 import EquipmentCard from "../components/equipment/EquipmentCard";
-import { DEPARTMENTS } from "../components/equipment/DepartmentSelect";
+import {
+  DEPARTMENTS,
+  loadDepartments,
+  findDepartmentIdByName,
+} from "../components/equipment/DepartmentSelect";
 import AppHeader from "../components/layout/AppHeader";
 import EmptyState from "../components/common/EmptyState";
 import AddEquipmentModal from "../components/equipment/AddEquipmentModal";
@@ -13,7 +17,7 @@ import AddEquipmentModal from "../components/equipment/AddEquipmentModal";
 const TREND_ICONS = ["fa-flask", "fa-microscope", "fa-blender"];
 
 function Home() {
-  const { selectedDepartmentId } = useApp();
+  const { selectedDepartmentId, setSelectedDepartmentId } = useApp();
   const { user } = useAuth();
   const [equipmentList, setEquipmentList] = useState([]);
   const [error, setError] = useState("");
@@ -23,12 +27,19 @@ function Home() {
   const [showAddModal, setShowAddModal] = useState(false);
   const navigate = useNavigate();
 
-  const isTA =
-    user &&
-    (user.role === "admin" ||
-      user.userId?.toLowerCase().includes("admin") ||
-      user.userId?.toLowerCase().includes("ta") ||
-      user.userName?.includes("조교"));
+  const isTA = user?.role === "admin";
+
+  useEffect(() => {
+    if (!user?.departmentName) {
+      return;
+    }
+    loadDepartments().then(() => {
+      const id = findDepartmentIdByName(user.departmentName);
+      if (id) {
+        setSelectedDepartmentId(id);
+      }
+    });
+  }, [user, setSelectedDepartmentId]);
 
   useEffect(() => {
     if (!selectedDepartmentId) {
@@ -43,12 +54,12 @@ function Home() {
   }, [selectedDepartmentId]);
 
   useEffect(() => {
-    if (!user) {
+    if (!user || isTA) {
       setDueSoonRental(null);
       return;
     }
 
-    getMyRentals(user.userId)
+    getMyRentals()
       .then((rentals) => {
         const rented = rentals
           .filter((rental) => rental.status === "rented")
@@ -78,9 +89,7 @@ function Home() {
       .toLowerCase()
       .includes(searchText.trim().toLowerCase());
     const matchesCategory =
-      !user ||
-      selectedCategory === "전체" ||
-      equipment.category === selectedCategory;
+      selectedCategory === "전체" || equipment.category === selectedCategory;
     return matchesSearch && matchesCategory;
   });
 
@@ -163,26 +172,24 @@ function Home() {
         <section className="mt-10 md:mt-12">
           {selectedDepartmentId && (
             <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <h2 className="text-xl font-bold text-gray-900">
+              <h3 className="text-xl font-bold text-gray-900">
                 {departmentName} 전체 기자재 목록
-              </h2>
-              {user && (
-                <div className="flex flex-wrap gap-2">
-                  {CATEGORIES.map((category) => (
-                    <button
-                      key={category}
-                      onClick={() => setSelectedCategory(category)}
-                      className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors cursor-pointer ${
-                        selectedCategory === category
-                          ? "bg-home-primary text-white shadow-sm"
-                          : "border border-gray-300 bg-white text-gray-600 hover:bg-gray-50"
-                      }`}
-                    >
-                      {category}
-                    </button>
-                  ))}
-                </div>
-              )}
+              </h3>
+              <div className="flex flex-wrap gap-2">
+                {CATEGORIES.map((category) => (
+                  <button
+                    key={category}
+                    onClick={() => setSelectedCategory(category)}
+                    className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors cursor-pointer ${
+                      selectedCategory === category
+                        ? "bg-home-primary text-white shadow-sm"
+                        : "border border-gray-300 bg-white text-gray-600 hover:bg-gray-50"
+                    }`}
+                  >
+                    {category}
+                  </button>
+                ))}
+              </div>
             </div>
           )}
 

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import {
@@ -6,6 +6,7 @@ import {
   getAllRentals,
   approveRental,
   rejectRental,
+  returnRental,
   cancelRental,
 } from "../api/rentalApi";
 import RentalHistoryItem from "../components/rental/RentalHistoryItem";
@@ -18,6 +19,7 @@ const FILTERS = [
   { value: "pending", label: "심사중" },
   { value: "rented", label: "대여중" },
   { value: "returned", label: "반납완료" },
+  { value: "rejected", label: "거절됨" },
 ];
 
 function MyPage() {
@@ -25,14 +27,11 @@ function MyPage() {
   const [rentals, setRentals] = useState([]);
   const [error, setError] = useState("");
   const [activeFilter, setActiveFilter] = useState("all");
+  const [cancellingId, setCancellingId] = useState(null);
+  const cancellingRef = useRef(false);
   const navigate = useNavigate();
 
-  const isTA =
-    user &&
-    (user.role === "admin" ||
-      user.userId?.toLowerCase().includes("admin") ||
-      user.userId?.toLowerCase().includes("ta") ||
-      user.userName?.includes("조교"));
+  const isTA = user?.role === "admin";
 
   function handleLogout() {
     logout();
@@ -40,15 +39,28 @@ function MyPage() {
   }
 
   async function handleCancelRental(rentalId) {
+    if (cancellingRef.current) {
+      return;
+    }
     if (!window.confirm("대여 신청을 취소하시겠습니까?")) {
       return;
     }
 
+    cancellingRef.current = true;
+    setCancellingId(rentalId);
     try {
       await cancelRental(rentalId);
       setRentals((prev) => prev.filter((r) => r.id !== rentalId));
     } catch (err) {
-      alert("대여 신청 취소에 실패했습니다.");
+      if (err.status === 404) {
+        // Already gone server-side (e.g. cancelled elsewhere) — reflect that locally.
+        setRentals((prev) => prev.filter((r) => r.id !== rentalId));
+      } else {
+        alert(err.message || "대여 신청 취소에 실패했습니다.");
+      }
+    } finally {
+      cancellingRef.current = false;
+      setCancellingId(null);
     }
   }
 
@@ -77,13 +89,27 @@ function MyPage() {
     }
   }
 
+  async function handleReturn(rentalId) {
+    if (!window.confirm("반납 처리하시겠습니까?")) {
+      return;
+    }
+    try {
+      await returnRental(rentalId);
+      setRentals((prev) =>
+        prev.map((r) => (r.id === rentalId ? { ...r, status: "returned" } : r)),
+      );
+    } catch (err) {
+      alert(err.message || "반납 처리에 실패했습니다.");
+    }
+  }
+
   useEffect(() => {
     if (!user) {
       return;
     }
 
     setError("");
-    const fetchFunc = isTA ? getAllRentals : () => getMyRentals(user.userId);
+    const fetchFunc = isTA ? getAllRentals : getMyRentals;
     fetchFunc()
       .then(setRentals)
       .catch(() => setError("대여 내역을 불러오지 못했습니다."));
@@ -122,7 +148,7 @@ function MyPage() {
             </div>
             <div>
               <h1 className="mb-1 text-2xl font-bold text-gray-900">
-                {isTA ? `${user.userName} (실습/행정)` : user.userName}
+                {isTA ? `${user.userName}` : user.userName}
               </h1>
               <p className="flex items-center gap-2 text-sm text-gray-500">
                 <i className="fa-solid fa-id-badge" />
@@ -131,13 +157,6 @@ function MyPage() {
               </p>
             </div>
           </div>
-          <button
-            onClick={handleLogout}
-            className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 cursor-pointer"
-          >
-            <i className="fa-solid fa-right-from-bracket" />
-            로그아웃
-          </button>
         </section>
 
         {error && <EmptyState message={error} />}
@@ -146,7 +165,7 @@ function MyPage() {
           <section>
             <div className="mb-4 flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
               <h2 className="text-xl font-bold text-gray-900">
-                {isTA ? "기자재 관리 및 대여 현황" : "대여 내역 (Rental History)"}
+                {isTA ? "기자재 관리 및 대여 현황" : "대여 내역"}
               </h2>
               <div className="flex items-center gap-1">
                 {FILTERS.map((filter) => (
@@ -170,12 +189,12 @@ function MyPage() {
             ) : isTA ? (
               <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
                 <div className="grid grid-cols-12 gap-3 bg-gray-50/80 border-b border-gray-200 p-4 text-xs font-bold tracking-wider text-gray-500 uppercase">
-                  <div className="col-span-3">STUDENT</div>
-                  <div className="col-span-2">DEPARTMENT</div>
-                  <div className="col-span-3">EQUIPMENT NAME</div>
-                  <div className="col-span-2">RENTAL PERIOD</div>
-                  <div className="col-span-1">REQUEST DATE</div>
-                  <div className="col-span-1 text-right">ACTIONS</div>
+                  <div className="col-span-3">학생</div>
+                  <div className="col-span-2">학과</div>
+                  <div className="col-span-3">대여 물품</div>
+                  <div className="col-span-2">대여 기관</div>
+                  <div className="col-span-1">반납 일자</div>
+                  <div className="col-span-1 text-right">상태 / 관리</div>
                 </div>
                 {filteredRentals.map((rental) => (
                   <TARentalItem
@@ -183,6 +202,7 @@ function MyPage() {
                     rental={rental}
                     onApprove={handleApprove}
                     onReject={handleReject}
+                    onReturn={handleReturn}
                   />
                 ))}
               </div>
@@ -200,6 +220,7 @@ function MyPage() {
                     key={rental.id}
                     rental={rental}
                     onCancel={handleCancelRental}
+                    isCancelling={cancellingId === rental.id}
                   />
                 ))}
               </div>

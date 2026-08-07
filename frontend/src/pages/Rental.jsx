@@ -5,6 +5,14 @@ import { createRental } from "../api/rentalApi";
 import { useAuth } from "../context/AuthContext";
 import LoginPromptModal from "../components/common/LoginPromptModal";
 
+function getTodayString() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
 function Rental() {
   const { id } = useParams();
   const [equipment, setEquipment] = useState(null);
@@ -15,6 +23,8 @@ function Rental() {
   const [error, setError] = useState("");
   const { user } = useAuth();
   const navigate = useNavigate();
+
+  const todayString = getTodayString();
 
   useEffect(() => {
     getEquipmentDetail(id)
@@ -31,10 +41,12 @@ function Rental() {
     );
   }
 
+  const isStartDateValid = !startDate || startDate >= todayString;
   const isDateOrderValid = !startDate || !endDate || endDate >= startDate;
   const isValid =
     startDate &&
     endDate &&
+    isStartDateValid &&
     isDateOrderValid &&
     quantity > 0 &&
     purpose.trim() !== "";
@@ -116,10 +128,16 @@ function Rental() {
                 id="start_date"
                 type="date"
                 required
+                min={todayString}
                 value={startDate}
                 onChange={(event) => setStartDate(event.target.value)}
                 className="w-full rounded-lg border border-outline-variant bg-surface-container-lowest px-md py-sm text-body-md font-body-md text-on-surface transition-all outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
               />
+              {!isStartDateValid && (
+                <p className="text-label-sm font-label-sm text-error">
+                  대여 시작일은 오늘 이전 날짜를 선택할 수 없습니다.
+                </p>
+              )}
             </div>
             <div className="flex flex-col gap-xs">
               <label
@@ -132,7 +150,7 @@ function Rental() {
                 id="end_date"
                 type="date"
                 required
-                min={startDate || undefined}
+                min={startDate || todayString}
                 value={endDate}
                 onChange={(event) => setEndDate(event.target.value)}
                 className="w-full rounded-lg border border-outline-variant bg-surface-container-lowest px-md py-sm text-body-md font-body-md text-on-surface transition-all outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
