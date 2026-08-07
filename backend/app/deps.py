@@ -50,4 +50,3 @@ def require_role(*allowed_roles: Role):
 
 
 require_assistant = require_role(Role.ASSISTANT)
-require_student = require_role(Role.STUDENT)

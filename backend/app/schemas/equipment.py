@@ -20,11 +20,14 @@ class EquipmentOut(BaseModel):
     created_at: datetime
 
     @staticmethod
-    def from_equipment(equipment) -> "EquipmentOut":
+    def from_equipment(equipment, base_url: str = "") -> "EquipmentOut":
+        image_url = equipment.image_url
+        if image_url and image_url.startswith("/"):
+            image_url = base_url.rstrip("/") + image_url
         return EquipmentOut(
             id=equipment.id,
             name=equipment.name,
-            image_url=equipment.image_url,
+            image_url=image_url,
             category=equipment.category,
             description=equipment.description,
             department_id=department_id_of(equipment.department),

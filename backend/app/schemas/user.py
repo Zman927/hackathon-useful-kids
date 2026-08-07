@@ -1,16 +1,30 @@
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel
 
-from app.models.enums import Department, Role
+from app.models.enums import Role
+
+ROLE_TO_FRONTEND = {
+    Role.ASSISTANT: "admin",
+    Role.STUDENT: "student",
+}
 
 
 class UserOut(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-
     id: int
     student_id: str
     name: str
-    department: Department
-    role: Role
+    department: str
+    role: str
     created_at: datetime
+
+    @staticmethod
+    def from_user(user) -> "UserOut":
+        return UserOut(
+            id=user.id,
+            student_id=user.student_id,
+            name=user.name,
+            department=user.department.value,
+            role=ROLE_TO_FRONTEND[user.role],
+            created_at=user.created_at,
+        )

@@ -29,10 +29,12 @@ app = FastAPI(
 )
 
 # 개발 단계 — 배포하지 않고 Tailscale로만 연결하므로 origin을 전부 허용한다.
+# 인증은 쿠키가 아니라 Authorization: Bearer 헤더로 하므로 credentials는 필요 없다.
+# (allow_origins="*" + allow_credentials=True는 브라우저 CORS 스펙 위반 조합)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_credentials=True,
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )

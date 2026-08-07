@@ -6,6 +6,7 @@ STATUS_TO_FRONTEND = {
     "PENDING": "pending",
     "APPROVED": "rented",
     "REJECTED": "rejected",
+    "RETURNED": "returned",
 }
 
 
@@ -45,10 +46,15 @@ class RentalOut(BaseModel):
     quantity: int
     purpose: str | None = None
     status: str
+    is_cross_department: bool
     created_at: datetime
+    processed_at: datetime | None = None
 
     @staticmethod
-    def from_models(rental, equipment, applicant) -> "RentalOut":
+    def from_models(rental, equipment, applicant, base_url: str = "") -> "RentalOut":
+        equipment_image_url = equipment.image_url
+        if equipment_image_url and equipment_image_url.startswith("/"):
+            equipment_image_url = base_url.rstrip("/") + equipment_image_url
         return RentalOut(
             id=rental.id,
             student_name=applicant.name,
@@ -56,7 +62,7 @@ class RentalOut(BaseModel):
             student_department=applicant.department.value,
             equipment_id=equipment.id,
             equipment_name=equipment.name,
-            equipment_image_url=equipment.image_url,
+            equipment_image_url=equipment_image_url,
             equipment_category=equipment.category,
             department_name=equipment.department.value,
             start_date=rental.start_date,
@@ -64,5 +70,7 @@ class RentalOut(BaseModel):
             quantity=rental.quantity,
             purpose=rental.reason,
             status=STATUS_TO_FRONTEND.get(rental.status.value, rental.status.value.lower()),
+            is_cross_department=rental.is_cross_department,
             created_at=rental.created_at,
+            processed_at=rental.processed_at,
         )

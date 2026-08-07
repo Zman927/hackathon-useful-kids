@@ -50,3 +50,4 @@ class RentalStatus(str, enum.Enum):
     PENDING = "PENDING"
     APPROVED = "APPROVED"
     REJECTED = "REJECTED"
+    RETURNED = "RETURNED"
