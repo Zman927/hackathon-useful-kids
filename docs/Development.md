@@ -73,6 +73,7 @@ sequenceDiagram
 gitGraph
     commit id: "초기 구조"
     branch backend
+    checkout main
     branch frontend
     checkout backend
     commit id: "API 구현"
@@ -81,7 +82,7 @@ gitGraph
     checkout main
     merge backend
     checkout frontend
-    merge main tag: "main 동기화"
+    merge main
     commit id: "API 연동"
     checkout main
     merge frontend

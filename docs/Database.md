@@ -17,9 +17,9 @@ erDiagram
 
     users {
         int id PK
-        varchar(20) student_id UK "로그인 ID"
-        varchar(255) password_hash "bcrypt"
-        varchar(50) name
+        varchar student_id UK "20자, 로그인 ID"
+        varchar password_hash "255자, bcrypt 해시"
+        varchar name "50자"
         enum department "32개 학과"
         enum role "STUDENT | ASSISTANT"
         timestamptz created_at
@@ -27,13 +27,13 @@ erDiagram
 
     equipments {
         int id PK
-        varchar(100) name
+        varchar name "100자"
         enum department "관리 학과"
-        varchar(50) category "nullable"
+        varchar category "50자, nullable"
         int total_quantity "전체 보유"
         int available_quantity "대여 가능"
         text description "nullable"
-        varchar(255) image_url "nullable, 상대경로"
+        varchar image_url "255자, nullable, 상대경로"
         timestamptz created_at
     }
 

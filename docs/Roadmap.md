@@ -22,23 +22,29 @@
 ## 단계별 계획
 
 ```mermaid
-timeline
-    title 확장 로드맵
-    section 1단계 · 운영 안정화
-        목표 : 실제 학과 1곳 도입
-             : 예약 캘린더
-             : 연체 관리
-             : 마이그레이션 도구
-    section 2단계 · 학사 연동
-        목표 : 계정 통합
-             : 학교 SSO
-             : QR 인증
-             : 재고 실사
-    section 3단계 · 전교 확대
-        목표 : 32개 학과 운영
-             : 관리자 위임
-             : 통계 대시보드
-             : 수요 예측
+flowchart LR
+    V1["<b>v1.0 · 현재</b><br/>조회 · 신청 · 승인<br/>반납 · 권한 · 동시성"]
+    S1["<b>1단계 · 운영 안정화</b><br/>예약 캘린더<br/>연체 관리 · 알림<br/>마이그레이션 · 테스트"]
+    S2["<b>2단계 · 학사 연동</b><br/>학교 SSO<br/>QR 인증<br/>재고 실사"]
+    S3["<b>3단계 · 전교 확대</b><br/>관리자 위임<br/>통계 대시보드<br/>AI 수요 예측"]
+
+    V1 --> S1 --> S2 --> S3
+
+    G1["학과 1곳<br/>한 학기 운영"]
+    G2["별도 계정 없이<br/>학교 계정 이용"]
+    G3["32개 학과<br/>전체 운영"]
+
+    S1 -.목표.-> G1
+    S2 -.목표.-> G2
+    S3 -.목표.-> G3
+
+    style V1 fill:#c8e6c9,stroke:#388e3c,stroke-width:2px
+    style S1 fill:#e3f2fd,stroke:#1976d2
+    style S2 fill:#fff3e0,stroke:#f57c00
+    style S3 fill:#f3e5f5,stroke:#7b1fa2
+    style G1 fill:#fafafa,stroke:#bdbdbd
+    style G2 fill:#fafafa,stroke:#bdbdbd
+    style G3 fill:#fafafa,stroke:#bdbdbd
 ```
 
 ---

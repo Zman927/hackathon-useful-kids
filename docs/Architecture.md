@@ -47,8 +47,8 @@ graph TB
 
 ```mermaid
 graph LR
-    A[팀원 A 노트북<br/>Vite Dev Server :5173] -.->|Tailscale<br/>100.x.y.z| B[팀원 B 노트북<br/>uvicorn :8000]
-    B --> C[(PostgreSQL<br/>로컬 설치)]
+    A["팀원 A 노트북<br/>Vite Dev Server :5173"] -.->|"Tailscale<br/>100.x.y.z"| B["팀원 B 노트북<br/>uvicorn :8000"]
+    B --> C[("PostgreSQL<br/>로컬 설치")]
 
     style A fill:#e3f2fd
     style B fill:#e8f5e9
@@ -162,11 +162,11 @@ PostgreSQL을 선택한 이유가 여기에 있습니다. SQLite는 이 수준�
 
 ```mermaid
 stateDiagram-v2
-    [*] --> PENDING: 신청<br/><b>재고 −N</b>
-    PENDING --> APPROVED: 조교 승인<br/>(재고 변동 없음)
-    PENDING --> REJECTED: 조교 반려<br/><b>재고 +N</b>
-    PENDING --> [*]: 학생 취소<br/><b>재고 +N</b><br/>(레코드 삭제)
-    APPROVED --> RETURNED: 조교 반납 처리<br/><b>재고 +N</b>
+    [*] --> PENDING: 신청 · 재고 −N
+    PENDING --> APPROVED: 조교 승인 · 재고 변동 없음
+    PENDING --> REJECTED: 조교 반려 · 재고 +N
+    PENDING --> [*]: 학생 취소 · 재고 +N · 레코드 삭제
+    APPROVED --> RETURNED: 조교 반납 처리 · 재고 +N
     REJECTED --> [*]
     RETURNED --> [*]
 ```
