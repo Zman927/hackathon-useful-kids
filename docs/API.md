@@ -197,18 +197,19 @@ GET /equipment?department_id=2
   {
     "id": 1,
     "name": "라즈베리 파이 4",
-    "department": "컴퓨터공학과",
-    "departmentId": 2,
+    "image_url": "http://100.74.207.33:8000/static/uploads/equipments/a1b2c3.jpg",
     "category": null,
-    "totalQuantity": 5,
-    "remainingQuantity": 4,
     "description": "라즈베리 파이 4 Model B",
-    "imageUrl": "http://100.74.207.33:8000/static/uploads/a1b2c3.jpg"
+    "department_id": 2,
+    "is_available": true,
+    "remaining_quantity": 4,
+    "total_quantity": 5,
+    "created_at": "2026-08-07T01:20:00Z"
   }
 ]
 ```
 
-> `imageUrl`은 DB에 상대 경로로 저장되며, 응답 시 요청의 base URL과 결합되어 절대 URL로 반환됩니다. 서버 주소가 바뀌어도 데이터 수정이 필요 없습니다.
+> `image_url`은 DB에 상대 경로로 저장되며, 응답 시 요청의 base URL과 결합되어 절대 URL로 반환됩니다. 서버 주소가 바뀌어도 데이터 수정이 필요 없습니다.
 
 **Errors**
 
@@ -297,27 +298,29 @@ available_quantity = max(0, available_quantity + delta)
 ```json
 {
   "id": 10,
-  "equipmentId": 1,
-  "equipmentName": "라즈베리 파이 4",
-  "departmentName": "컴퓨터공학과",
-  "imageUrl": "http://100.74.207.33:8000/static/uploads/a1b2c3.jpg",
-  "applicantName": "컴퓨터공학과 학생",
-  "applicantStudentId": "2026001",
-  "startDate": "2026-08-10",
-  "endDate": "2026-08-15",
+  "student_name": "컴퓨터공학과 학생",
+  "student_id": "2026001",
+  "student_department": "컴퓨터공학과",
+  "equipment_id": 1,
+  "equipment_name": "라즈베리 파이 4",
+  "equipment_image_url": "http://100.74.207.33:8000/static/uploads/equipments/a1b2c3.jpg",
+  "equipment_category": null,
+  "department_name": "컴퓨터공학과",
+  "start_date": "2026-08-10",
+  "end_date": "2026-08-15",
   "quantity": 1,
   "purpose": "캡스톤 디자인 프로젝트 프로토타입 제작",
   "status": "pending",
-  "isCrossDepartment": false,
-  "createdAt": "2026-08-07T02:00:00Z",
-  "processedAt": null
+  "is_cross_department": false,
+  "created_at": "2026-08-07T02:00:00Z",
+  "processed_at": null
 }
 ```
 
 | 필드 | 설명 |
 |---|---|
 | `status` | `pending` \| `rented` \| `rejected` \| `returned` |
-| `isCrossDepartment` | 신청 시점에 `기자재 학과 ≠ 신청자 학과`이면 `true` |
+| `is_cross_department` | 신청 시점에 `기자재 학과 ≠ 신청자 학과`이면 `true` |
 
 **Errors**
 
