@@ -7,7 +7,7 @@ from fastapi.staticfiles import StaticFiles
 from app.core.storage import STATIC_ROOT
 from app.core.database import AsyncSessionLocal, Base, engine
 from app.init_db import seed_initial_data
-from app.api import assistant, auth, student
+from app.api import auth, departments, equipment, rentals
 
 
 @asynccontextmanager
@@ -29,10 +29,12 @@ app = FastAPI(
 )
 
 # 개발 단계 — 배포하지 않고 Tailscale로만 연결하므로 origin을 전부 허용한다.
+# 인증은 쿠키가 아니라 Authorization: Bearer 헤더로 하므로 credentials는 필요 없다.
+# (allow_origins="*" + allow_credentials=True는 브라우저 CORS 스펙 위반 조합)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_credentials=True,
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -40,8 +42,9 @@ app.add_middleware(
 app.mount("/static", StaticFiles(directory=STATIC_ROOT), name="static")
 
 app.include_router(auth.router)
-app.include_router(assistant.router)
-app.include_router(student.router)
+app.include_router(equipment.router)
+app.include_router(rentals.router)
+app.include_router(departments.router)
 
 
 @app.get("/health", tags=["health"])

@@ -49,7 +49,16 @@ copy .env.example .env             # Windows
 uvicorn app.main:app --reload --port 8000
 ```
 
-정상 실행되면 `http://localhost:8000/health`에서 `{"status": "ok"}` 확인.
+정상 실행되면 `http://localhost:8000/health`에서 `{"status": "ok"}` 확인. `http://localhost:8000/docs`에서 Swagger UI로 전체 API를 바로 테스트해볼 수 있다.
+
+앱이 처음 시작될 때 테이블을 자동 생성하고(`Base.metadata.create_all`, 마이그레이션 도구 없음), 5개 학과(AI·SW융합학부 소속)에 조교·학생 계정과 기자재 시드 데이터를 자동으로 채운다(`app/init_db.py`, 이미 있으면 건너뜀). 시드 계정 로그인 정보:
+
+| 학번(ID) | 비밀번호 | 역할 |
+|---|---|---|
+| `com` | `pwd123` | 컴퓨터공학과 조교 |
+| `2026001` | `pwd123` | 컴퓨터공학과 학생 |
+
+다른 4개 학과(AI게임소프트웨어, 컴퓨터보안공학과, 전자공학과, 정보통신공학과)도 같은 패턴(조교 계정 학과 약칭, 학생 계정 `2026xxx`)으로 존재한다. 전체 목록은 `backend/app/init_db.py`의 `SEED_DATA` 참고.
 
 ## 3. Frontend 실행
 
@@ -74,6 +83,8 @@ SECRET_KEY=<임의의 랜덤 문자열>
 ALGORITHM=HS256
 ACCESS_TOKEN_EXPIRE_MINUTES=60
 ```
+
+`SECRET_KEY`는 JWT 서명에 쓰인다 — `.env.example`의 예시 문구(`change-this-secret-key-...`)를 그대로 두면 로그인 토큰을 아무나 위조할 수 있으니 **반드시 랜덤 값으로 바꿀 것**. 생성 예: `python3 -c "import secrets; print(secrets.token_hex(32))"`
 
 ### frontend/.env
 
